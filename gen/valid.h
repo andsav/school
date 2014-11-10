@@ -45,4 +45,7 @@ void printSymbols();
 vector<string> getOrder();
 cell getSignature();
 
+bool isNum(const string&);
+bool isReg(const string&);
+
 #endif
