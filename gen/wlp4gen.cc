@@ -12,8 +12,13 @@ int main() {
 		signature = getSignature();
 		testTypes(parseTree);
 
-		Mini m(parseTree, symbols, order);
-		// FUN TIMES
+		Mini mini(parseTree, symbols, order);
+		Split flow(mini);
+		Opt instr(flow);
+		Loc loc(instr);
+		Mips m(instr, loc);
+
+		m.print();
 	}
 	catch(string err) {
 		cerr << "ERROR (" << err << ")" << endl;
