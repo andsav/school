@@ -1,5 +1,5 @@
 #include "Valid.h"
-#include "Mini.h"
+#include "Mips.h"
 
 int main() {
 
@@ -15,10 +15,12 @@ int main() {
 		//testTypes(parseTree);
 
 		Mini m(parseTree, symbols, order);
-		cout << m;
-		//Split flow(mini.getCode());
-		//Opt instr(flow);
-		//Loc loc(mini.getCode());
+		//
+		//
+		//procedures = optimize(split(m.getCode()));
+		procedures p = m.getCode();
+		Loc loc(p);
+		cout << loc;
 		//Mips m(mini.getCode(), loc);
 
 		//m.print();

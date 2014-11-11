@@ -14,7 +14,9 @@ struct Instr {
 
 	void splitArgs(const string&);
 
-	friend ostream& operator<<(ostream&, const Instr&);
+	bool empty();
+
+	friend ostream& operator<<(ostream&, Instr&);
 };
 
 typedef map<string, vector<Instr> > procedures;
@@ -53,6 +55,8 @@ _____________________________________________________________
 
 class Mini {
 
+friend ostream& operator<<(ostream&, Mini&);
+
 private:
 	string current; 						// The current procedure (prevents needing to pass it around)
 	int loopCount, ifCount;					// current loop and conditional id
@@ -78,8 +82,6 @@ private:
 public:
 	Mini(Tree&, table&, vector<string>&);
 	procedures getCode();
-
-friend ostream& operator<<(ostream&, Mini&);
 
 };
 

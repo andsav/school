@@ -20,8 +20,12 @@ void Instr::splitArgs(const string& args) {
 	}
 }
 
-ostream& operator<<(ostream& out, const Instr& instr) {
-	if(instr.cmd != 0) {
+bool Instr::empty() {
+	return (this->cmd == 0);
+} 
+
+ostream& operator<<(ostream& out, Instr& instr) {
+	if(!instr.empty()) {
 		out << instr.var << " " << instr.cmd;
 		for(int j=0; j<instr.args.size(); ++j) {
 			out << " " << instr.args[j];
@@ -51,6 +55,7 @@ void Mini::genCode(Tree &t) {
 			ret 			= &t.children[0].children[11];
 
 			// dcl, dcl (wain args) assume they are $1, $2
+			// Assumes MIPS twoints
 			this->code["wain"].push_back(Instr(
 				t.children[0].children[3].children[1].rhs()[0],
 				'=',
@@ -62,6 +67,10 @@ void Mini::genCode(Tree &t) {
 				'=',
 				string("$2")
 				));
+
+			// TODO: MIPS array
+			//
+			//
 
 			 returnTo = "$3";
 		}
@@ -181,6 +190,9 @@ vector<Instr> Mini::dclsCode(Tree& t){
 	return ret;
 }
 
+procedures Mini::getCode() {
+	return this->code;
+}
 
 ostream& operator<<(ostream& out, Mini& mini) {
 	for(int i=0; i<mini.order.size(); ++i) {
