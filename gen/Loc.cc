@@ -34,7 +34,7 @@ Loc::Loc(procedures& p) : p(p) {
 }
 
 void Loc::genLocations(string current) {
-	map<int, vector<int> > freeAt;
+	map<int, vector<pair<string, int> > > freeAt;
 	vector<string> active;
 	sortByEndPoint s(this);
 
@@ -43,7 +43,13 @@ void Loc::genLocations(string current) {
 		// There are registers that become free at this instruction
 		if(freeAt.count(i) != 0) {
 			for(int k=0; k<freeAt[i].size(); ++k) {
-				this->freeRegs.push(freeAt[i][k]);
+				// Add register back to stack
+				this->freeRegs.push(freeAt[i][k].second);
+
+				// Remove variable from actives
+				active.erase(
+					remove(active.begin(), active.end(), freeAt[i][k].first),
+					active.end());
 			}
 		}
 
@@ -61,8 +67,11 @@ void Loc::genLocations(string current) {
 			// Use the first reg available
 			else {
 				this->location[current][var] = this->freeRegs.top();
-				freeAt[this->alive[current][var].second + 1].push_back(this->freeRegs.top());
+				freeAt[this->alive[current][var].second + 1].push_back(make_pair(var, this->freeRegs.top()));
 				this->freeRegs.pop();
+
+				active.push_back(var);
+				sort(active.begin(), active.end(), s);
 			}
 		}
 	}
@@ -150,5 +159,12 @@ ostream& operator<<(ostream& out, Loc& l) {
 			out << " " << l.instrVars["wain"][i][j];
 		}
 		out << endl;
+	}
+
+	out << endl << endl;
+
+	for(map<string, int>::iterator it = l.location["wain"].begin(); it != l.location["wain"].end(); ++it) {
+		if(isReg(it->first)) continue;
+		out << it->first << ": " << it->second << endl;
 	}
 }
