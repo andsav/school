@@ -64,7 +64,8 @@ private:
 	void genCode(Tree&);					// entry point, procedures, wain
 
 	vector<Instr> exprCode(string, Tree&);	// expr, term, factor
-	vector<Instr> statementsCode(Tree&);	// statements, dcl
+	vector<Instr> statementsCode(Tree&);	// statements
+	vector<Instr> dclsCode(Tree&);			// dcls
 	vector<Instr> testCode(Tree&);			// test
 	vector<Instr> loopCode(Tree&);			// statement if
 	vector<Instr> ifCode(Tree&);			// statement while

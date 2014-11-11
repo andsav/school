@@ -41,40 +41,76 @@ Mini::Mini(Tree& parseTree, table& symbols, vector<string>& order) :
 
 void Mini::genCode(Tree &t) {
 	if(t.lhs() == "procedure" || t.rhs()[0] == "main") {
-		if(t.rhs()[0] == "main") {
-			this->current = "wain";
-			Tree& statements = t.children[0].children[9];
-			Tree& ret = t.children[0].children[11];
+		Tree *dcls, *statements, *ret;
+		string returnTo;
 
-			// dcl, dcl (wain args)
-			code.push_back(Instr(
+		if(t.rhs()[0] == "main") {
+			this->current 	= "wain";
+			dcls 			= &t.children[0].children[5];
+			statements 		= &t.children[0].children[9];
+			ret 			= &t.children[0].children[11];
+
+			// dcl, dcl (wain args) assume they are $1, $2
+			this->code["wain"].push_back(Instr(
 				t.children[0].children[3].children[1].rhs()[0],
 				'=',
 				string("$1")
 				));	
 
-			 code.push_back(Instr(
+			this->code["wain"].push_back(Instr(
 				t.children[0].children[5].children[1].rhs()[0],
 				'=',
 				string("$2")
 				));
-			 
+
+			 returnTo = "$3";
 		}
 		else {
-			this->current = t.children[1].rhs()[0];
-			Tree& statements = t.children[6];
-			Tree& ret = t.children[8];
+			this->current 	= t.children[1].rhs()[0];
+			dcls 			= &t.children[5];
+			statements 		= &t.children[6];
+			ret 			= &t.children[8];
 
-			//
+			// argslist
+
+			returnTo = "$5";
 		}
 
-		vector<Instr>& code = this->code[current];
+		vector<Instr>& code = this->code[this->current];
+		vector<Instr> retCode;
+
+		// dcls
+		retCode = this->dclsCode(*dcls);
+		code.insert(code.end(), retCode.begin(), retCode.end());
+
+		// statements
+		retCode = this->statementsCode(*statements);
+		code.insert(code.end(), retCode.begin(), retCode.end());
+
+		 // RETURN expr
+		retCode = this->exprCode(returnTo, *ret);
+		code.insert(code.end(), retCode.begin(), retCode.end());
+
 	}
 	else {	// procedures procedure procedures
 		this->genCode(t.children[0]);
 		this->genCode(t.children[1]);
 	}
 }
+
+vector<Instr> Mini::exprCode(string, Tree&) {
+	vector<Instr> ret;
+	return ret;
+}
+vector<Instr> Mini::statementsCode(Tree&) {
+	vector<Instr> ret;
+	return ret;
+}
+vector<Instr> Mini::dclsCode(Tree&){
+	vector<Instr> ret;
+	return ret;
+}
+
 
 ostream& operator<<(ostream& out, Mini& mini) {
 	for(int i=0; i<mini.order.size(); ++i) {
