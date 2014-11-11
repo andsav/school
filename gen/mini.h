@@ -54,8 +54,9 @@ _____________________________________________________________
 class Mini {
 
 private:
-	string current; 	// The current procedure (prevents needing to pass it around)
-	int loopI, ifI;		// current loop and conditional id
+	string current; 						// The current procedure (prevents needing to pass it around)
+	int loopCount, ifCount;					// current loop and conditional id
+	map<string, int> tempCount;
 
 	Tree &parseTree;
 	vector<string>& order;

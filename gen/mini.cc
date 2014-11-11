@@ -98,15 +98,85 @@ void Mini::genCode(Tree &t) {
 	}
 }
 
-vector<Instr> Mini::exprCode(string, Tree&) {
+vector<Instr> Mini::exprCode(string var, Tree& t) {
 	vector<Instr> ret;
+
+	if(t.toString() == "expr term" || t.toString() == "term factor") {
+		return this->exprCode(var, t.children[0]);
+	}
+	else if(t.toString() == "factor LPAREN expr RPAREN") {
+		return this->exprCode(var, t.children[1]);
+	}
+	else if(t.toString() == "factor ID" || t.toString() == "factor NUM") {
+		ret.push_back(Instr(
+			var,
+			'=',
+			t.children[0].rhs()[0]
+			)); 
+	}
+	else if ((t.lhs() == "expr" || t.lhs() == "term") && t.rhs().size() == 3) {
+		char operation;
+
+		if(t.toString() == "expr expr PLUS term")
+			operation = '+';
+		else if(t.toString() == "expr expr MINUS term")
+			operation = '-';
+		else if(t.toString() == "term term STAR factor")
+			operation = '*';
+		else if(t.toString() == "term term SLASH factor")
+			operation = '/';
+		else if(t.toString() == "term term PCT factor")
+			operation = '%';
+
+		this->tempCount[this->current]++;
+
+		stringstream tc;
+		tc << tempCount[this->current];
+
+		string temp = string("t" + tc.str());
+
+		vector<Instr> ret1, ret2;
+		ret2 = this->exprCode(temp, t.children[0]);
+		ret1 = this->exprCode(var, t.children[2]);
+
+		ret.insert(ret.end(), ret1.begin(), ret1.end());
+		ret.insert(ret.end(), ret2.begin(), ret2.end());
+
+		ret.push_back(Instr(
+			var,
+			'=',
+			string(temp + " " + operation + " " + var)
+			));
+	}
+
 	return ret;
 }
-vector<Instr> Mini::statementsCode(Tree&) {
-	vector<Instr> ret;
+vector<Instr> Mini::statementsCode(Tree& t) {
+	vector<Instr> ret, ret2;
+	if(t.lhs() == "statements") {
+		if(t.rhs().empty()) {
+			return ret;
+		}
+		else if(t.toString() == "statements statements statement") {
+			ret = this->statementsCode(t.children[0]);
+			ret2 = this->statementsCode(t.children[1]);
+
+			ret.insert(ret.end(), ret2.begin(), ret2.end());
+		}
+	}
+	else if(t.lhs() == "statement") {
+		if(t.toString() == "statement PRINTLN LPAREN expr RPAREN SEMI") {
+			ret = this->exprCode(string("$1"), t.children[2]);
+			ret.push_back(Instr(
+				string("$1"),
+				'P'
+				));
+		}
+	}
+
 	return ret;
 }
-vector<Instr> Mini::dclsCode(Tree&){
+vector<Instr> Mini::dclsCode(Tree& t){
 	vector<Instr> ret;
 	return ret;
 }
