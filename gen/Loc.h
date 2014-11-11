@@ -1,6 +1,19 @@
 #ifndef LOC_H
 #define LOC_H
 
+#define FOREACH_PROCEDURE(call) { 					\
+													\
+	(call)(string("wain"));							\
+													\
+	for(procedures::iterator it = this->p.begin(); 	\
+		it != this->p.end(); 						\
+		++it) {										\
+		if(it->first == "wain") continue;			\
+		(call)(it->first);							\
+	}												\
+}
+
+
 #include <algorithm>
 #include "Opt.h"
 
@@ -41,7 +54,8 @@ private:
 
 public:
 	Loc(procedures&);
-
+	locTable getLocation();
+	int getOffset();
 };
 
 struct sortByEndPoint {

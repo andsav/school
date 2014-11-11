@@ -1,18 +1,4 @@
-#include "Loc.h"
-
-#define FOREACH_PROCEDURE(call) { 					\
-													\
-	(call)(string("wain"));							\
-													\
-	for(procedures::iterator it = this->p.begin(); 	\
-		it != this->p.end(); 						\
-		++it) {										\
-		if(it->first == "wain") continue;			\
-		(call)(it->first);							\
-	}												\
-}													
-
-
+#include "Loc.h"												
 
 sortByEndPoint::sortByEndPoint(Loc* l) : l(l) {}
 
@@ -149,6 +135,14 @@ vector<string> Loc::varsUsed(Instr& instr) {
 	}
 
 	return ret;
+}
+
+locTable Loc::getLocation() {
+	return this->location; 
+}
+
+int Loc::getOffset() {
+	return this->offset;
 }
 
 ostream& operator<<(ostream& out, Loc& l) {

@@ -20,10 +20,10 @@ int main() {
 		//procedures = optimize(split(m.getCode()));
 		procedures p = m.getCode();
 		Loc loc(p);
-		cout << loc;
-		//Mips m(mini.getCode(), loc);
+		locTable l = loc.getLocation();
 
-		//m.print();
+		Mips mips(p, l, loc.getOffset());
+		cout << mips;
 	}
 	catch(string err) {
 		cerr << "ERROR (" << err << ")" << endl;
