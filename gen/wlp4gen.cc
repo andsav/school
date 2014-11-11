@@ -1,5 +1,5 @@
 #include "Valid.h"
-#include "Mips.h"
+#include "Mini.h"
 
 int main() {
 
@@ -14,13 +14,14 @@ int main() {
 		signature = getSignature();
 		//testTypes(parseTree);
 
-		Mini mini(parseTree, symbols, order);
-		Split flow(mini);
-		Opt instr(flow);
-		Loc loc(instr);
-		Mips m(instr, loc);
+		Mini m(parseTree, symbols, order);
+		cout << m;
+		//Split flow(mini.getCode());
+		//Opt instr(flow);
+		//Loc loc(mini.getCode());
+		//Mips m(mini.getCode(), loc);
 
-		m.print();
+		//m.print();
 	}
 	catch(string err) {
 		cerr << "ERROR (" << err << ")" << endl;

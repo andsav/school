@@ -12,7 +12,9 @@ struct Instr {
 	Instr(char, string);
 	Instr();
 
-	friend ostream& operator<<(ostream& out, const Instr& instr);
+	void splitArgs(const string&);
+
+	friend ostream& operator<<(ostream&, const Instr&);
 };
 
 typedef map<string, vector<Instr> > procedures;
@@ -35,11 +37,12 @@ _____________________________________________________________
 a P 							#### PRINT contents of a
 _____________________________________________________________
 
-1 I a [EQ|NE|LT|LE|GE|GT] b		#### Conditionnal
-i 1
+1 I a [EQ|NE|LT|LE|GE|GT] b		#### I1: if(!test) goto e1
+e 1								#### e1: if(test) goto i1
+i 1								#### i1:
 
-1 W a [EQ|NE|LT|LE|GE|GT] b		#### Loop
-w 1
+1 W a [EQ|NE|LT|LE|GE|GT] b		#### W1: if(!test) goto w1 
+w 1								#### w1: goto W1
 _____________________________________________________________
 
 a N b							#### Return to b, beginning of a contiguous sequence of a words of memory
@@ -52,13 +55,14 @@ class Mini {
 
 private:
 	string current; 	// The current procedure (prevents needing to pass it around)
-	int loopi, ifi;		// current loop and conditional id
+	int loopI, ifI;		// current loop and conditional id
 
 	Tree &parseTree;
 	vector<string>& order;
 	table &symbols;
 
-	void genCode(Tree&);					// entry point (wain, procedures)
+	void genCode(Tree&);					// entry point, procedures, wain
+
 	vector<Instr> exprCode(string, Tree&);	// expr, term, factor
 	vector<Instr> statementsCode(Tree&);	// statements, dcl
 	vector<Instr> testCode(Tree&);			// test
@@ -72,7 +76,8 @@ private:
 public:
 	Mini(Tree&, table&, vector<string>&);
 	procedures getCode();
-	void print();
+
+friend ostream& operator<<(ostream&, Mini&);
 
 };
 
