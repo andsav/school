@@ -12,18 +12,13 @@
 	}												\
 }													
 
-/*
-*	SORT BY TIME ALIVE
-*/
 
-/*
-sortByAlive::sortByAlive(Loc* l) : l(l) {}
 
-bool sortByAlive::operator() (const string& a, const string& b) {
-	return ((l->alive[l->current][a].second - l->alive[l->current][a].first) 
-			> (l->alive[l->current][b].second - l->alive[l->current][b].first));
+sortByEndPoint::sortByEndPoint(Loc* l) : l(l) {}
+
+bool sortByEndPoint::operator() (const string& a, const string& b) {
+	return (l->alive[l->current][a].second > l->alive[l->current][b].second);
 }
-*/
 
 /*
 *	REGISTER ALLOCATION
@@ -40,7 +35,9 @@ Loc::Loc(procedures& p) : p(p) {
 
 void Loc::genLocations(string current) {
 	map<int, vector<int> > freeAt;
-	
+	vector<string> active;
+	sortByEndPoint s(this);
+
 	for(int i=0; i < this->instrVars[current].size(); ++i) {
 
 		// There are registers that become free at this instruction
@@ -109,18 +106,6 @@ void Loc::genAlive(string current) {
 			this->instrVars[current][i].push_back(it->first);
 		}
 	}
-
-	/*
-	// For each instruction, sort the sybmols by their alive time
-	//
-	// this will give symbols their allocation priority
-	//
-	sortByAlive s(this);
-	for(int i=0; i < this->instrVars[current].size(); ++i) {
-		sort(this->instrVars[current][i].begin(), this->instrVars[current][i].end(), s);
-	}
-	*/
-
 }
 
 void Loc::genAlive() {
