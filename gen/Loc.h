@@ -24,8 +24,12 @@ private:
 	liveTable 		alive;
 	instrVarsTable 	instrVars;
 
+	vector<string> 	active;
 
 	void addAlive(string&, int);
+
+	void expire(string);
+	void spill(string);
 
 	void genAlive(string);
 	void genAlive();

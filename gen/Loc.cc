@@ -17,7 +17,7 @@
 sortByEndPoint::sortByEndPoint(Loc* l) : l(l) {}
 
 bool sortByEndPoint::operator() (const string& a, const string& b) {
-	return (l->alive[l->current][a].second > l->alive[l->current][b].second);
+	return (l->alive[l->current][a].second < l->alive[l->current][b].second);
 }
 
 /*
@@ -33,53 +33,52 @@ Loc::Loc(procedures& p) : p(p) {
 	this->genLocations();
 }
 
-void Loc::genLocations(string current) {
-	map<int, vector<pair<string, int> > > freeAt;
-	vector<string> active;
+void Loc::expire(string var) {
+	for(int i=0; i<this->active.size(); ++i) {
+		if(this->alive[this->current][this->active[i]].second >= this->alive[this->current][var].first) {
+			break;
+		}
+
+		this->active.erase(
+			remove(this->active.begin(), this->active.end(), this->active[i]),
+			this->active.end());
+		this->freeRegs.push(this->location[this->current][this->active[i]]);
+	}
+}
+
+void Loc::spill(string var) {
+	string spill = active[active.size()-1];
 	sortByEndPoint s(this);
 
-	for(int i=0; i < this->instrVars[current].size(); ++i) {
-
-		// There are registers that become free at this instruction
-		if(freeAt.count(i) != 0) {
-			for(int k=0; k<freeAt[i].size(); ++k) {
-				// Add register back to stack
-				this->freeRegs.push(freeAt[i][k].second);
-
-				// Remove variable from actives
-				active.erase(
-					remove(active.begin(), active.end(), freeAt[i][k].first),
-					active.end());
-			}
-		}
-
-		for(int j=0; j< this->instrVars[current][i].size(); ++j) {
-			string& var = instrVars[current][i][j];
-
-			// Location already attributed to this symbol
-			if(this->location[current].count(var) != 0) continue;
-			
-			// No free regs, we must use memory
-			if(this->freeRegs.empty()) {
-				offset++;
-				this->location[current][var] = -4*offset;
-			}
-			// Use the first reg available
-			else {
-				this->location[current][var] = this->freeRegs.top();
-				freeAt[this->alive[current][var].second + 1].push_back(make_pair(var, this->freeRegs.top()));
-				this->freeRegs.pop();
-
-				active.push_back(var);
-				sort(active.begin(), active.end(), s);
-			}
-		}
+	if(this->alive[this->current][spill].second > this->alive[this->current][var].second) {
+		this->location[this->current][var] = this->location[this->current][spill];
+		offset++;
+		this->location[this->current][spill] = -4*offset;
+		active.pop_back();
+		active.push_back(var);
+		sort(active.begin(), active.end(), s);
 	}
-	// Registers have location pointed to themselves
-	for(int i=1; i<31; ++i) {
-		stringstream ss;
-		ss << i;
-		this->location[current][string("$" + ss.str())] = i;
+	else {
+		offset++;
+		this->location[this->current][var] = -4*offset;
+	}
+}
+
+void Loc::genLocations(string current) {
+	sortByEndPoint s(this);
+	this->current = current;
+	
+	for(map<string, pair<int, int> >::iterator it = this->alive[current].begin(); it != this->alive[current].end(); ++it) {
+		this->expire(it->first);
+		if(this->active.size() == 14) {
+			this->spill(it->first);
+		}
+		else {
+			this->location[current][it->first] = this->freeRegs.top();
+			this->freeRegs.pop();
+			active.push_back(it->first);
+			sort(active.begin(), active.end(), s);
+		}
 	}
 }
 
@@ -153,6 +152,20 @@ vector<string> Loc::varsUsed(Instr& instr) {
 }
 
 ostream& operator<<(ostream& out, Loc& l) {
+	for(map<string, pair<int, int> >::iterator it = l.alive["wain"].begin(); it != l.alive["wain"].end(); ++it) {
+		int i = it->second.first;
+		Instr& instr = l.p["wain"][i];
+
+		out << endl << ";; " << instr.var << " " << instr.cmd;
+		for(int j=0; j<instr.args.size(); ++j) {
+			out << " " << instr.args[j];
+		}
+		out << endl;
+		out << it->first << ": " << it->second.first << " " << it->second.second << endl;
+	}
+
+	out << endl << endl;
+
 	for(int i=0; i < l.instrVars["wain"].size(); ++i) {
 		out << i;
 		for(int j=0; j< l.instrVars["wain"][i].size(); ++j) {
