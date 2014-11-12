@@ -23,7 +23,7 @@ int main() {
 		locTable l = loc.getLocation();
 
 		Mips mips(p, l, loc.getOffset());
-		cout << loc;
+		cout << mips;
 	}
 	catch(string err) {
 		cerr << "ERROR (" << err << ")" << endl;

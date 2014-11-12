@@ -24,6 +24,7 @@ typedef map<string, map<int, vector<string> > > 	instrVarsTable;
 class Loc{
 
 friend struct sortByEndPoint;
+friend struct sortByStartPoint;
 friend ostream& operator<<(ostream&, Loc&);
 
 private:
@@ -38,6 +39,8 @@ private:
 	instrVarsTable 	instrVars;
 
 	vector<string> 	active;
+
+	map<string, vector<string> > order;
 
 	void addAlive(string&, int);
 
@@ -63,5 +66,12 @@ struct sortByEndPoint {
 	sortByEndPoint(Loc*);
 	bool operator() (const string&, const string&);
 };
+
+struct sortByStartPoint {
+	Loc* l;
+	sortByStartPoint(Loc*);
+	bool operator() (const string&, const string&);
+};
+
 
 #endif

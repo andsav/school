@@ -6,6 +6,12 @@ bool sortByEndPoint::operator() (const string& a, const string& b) {
 	return (l->alive[l->current][a].second < l->alive[l->current][b].second);
 }
 
+sortByStartPoint::sortByStartPoint(Loc* l) : l(l) {}
+
+bool sortByStartPoint::operator() (const string& a, const string& b) {
+	return (l->alive[l->current][a].first < l->alive[l->current][b].first);
+}
+
 /*
 *	REGISTER ALLOCATION
 */
@@ -25,16 +31,17 @@ void Loc::expire(string var) {
 			break;
 		}
 
+		this->freeRegs.push(this->location[this->current][this->active[i]]);
 		this->active.erase(
 			remove(this->active.begin(), this->active.end(), this->active[i]),
 			this->active.end());
-		this->freeRegs.push(this->location[this->current][this->active[i]]);
+		cout << this->active[i] << " " << this->freeRegs.top() << endl;
 	}
 }
 
 void Loc::spill(string var) {
 	string spill = active[active.size()-1];
-	sortByEndPoint s(this);
+	sortByEndPoint end(this);
 
 	if(this->alive[this->current][spill].second > this->alive[this->current][var].second) {
 		this->location[this->current][var] = this->location[this->current][spill];
@@ -42,7 +49,7 @@ void Loc::spill(string var) {
 		this->location[this->current][spill] = -4*offset;
 		active.pop_back();
 		active.push_back(var);
-		sort(active.begin(), active.end(), s);
+		sort(active.begin(), active.end(), end);
 	}
 	else {
 		offset++;
@@ -51,19 +58,25 @@ void Loc::spill(string var) {
 }
 
 void Loc::genLocations(string current) {
-	sortByEndPoint s(this);
+	sortByEndPoint end(this);
+	sortByStartPoint start(this);
+
+	sort(this->order[current].begin(), this->order[current].end(), start);
 	this->current = current;
 	
-	for(map<string, pair<int, int> >::iterator it = this->alive[current].begin(); it != this->alive[current].end(); ++it) {
-		this->expire(it->first);
-		if(this->active.size() == 14) {
-			this->spill(it->first);
+	for(int i=0; i<this->order[current].size(); ++i) {
+		string& var = this->order[current][i];
+
+		this->expire(var);
+
+		if(this->freeRegs.empty()) {
+			this->spill(var);
 		}
 		else {
-			this->location[current][it->first] = this->freeRegs.top();
+			this->location[current][var] = this->freeRegs.top();
 			this->freeRegs.pop();
-			active.push_back(it->first);
-			sort(active.begin(), active.end(), s);
+			active.push_back(var);
+			sort(active.begin(), active.end(), end);
 		}
 	}
 }
@@ -110,6 +123,7 @@ void Loc::addAlive(string& var, int i) {
 	if(!isReg(var)) {
 		if(this->alive[this->current].count(var) == 0) {
 			this->alive[this->current][var] = make_pair(i, i);
+			this->order[this->current].push_back(var);
 		}
 		else {
 			this->alive[this->current][var].second = i;
