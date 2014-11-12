@@ -17,11 +17,17 @@ private:
 
 	void prologue();
 	void epilogue();
-	
+
 	void genCode(string);
 	void genCode();
 
 	void genComment(Instr&);
+
+	void operation(Instr& instr);
+	void is(string a, string b);
+
+	bool isStored(string&);
+	int getLocation(string&);
 
 public:
 	Mips(procedures&, locTable&, int);
