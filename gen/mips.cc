@@ -27,7 +27,7 @@ void Mips::prologue() {
     }
     else {
     	this->out << "lis $4" << endl 
-    			  << ".word " << (4*this->offset == 4) << endl
+    			  << ".word " << (4*this->offset) << endl
     			  << "sub $30, $30, $4" << endl
     			  << "lis $4" << endl 
     			  << ".word 4" << endl;
@@ -71,15 +71,81 @@ void Mips::genCode(string current) {
 				}
 				this->out << "jalr $10" << endl;
 			break;
+
+			case 'I' :
+				this->genTest(instr.args, instr.var, string("else" + instr.var));
+				this->out << "begin" << instr.var << ": " << endl;
+			break;
+
+			case 'e' :
+				this->out << "beq $0, $0, end" << instr.var << endl
+						  << "else" << instr.var << ": " << endl;
+			break;
+
+			case 'i' :
+				this->out << "end" << instr.var << ": " << endl;
+			break;
+
+			case 'W' :
+				this->out << "test" << instr.var << ": " << endl;
+				this->genTest(instr.args, instr.var, string("end" + instr.var));
+				this->out << "begin" << instr.var << ": " << endl;
+
+			break;
+
+			case 'w':
+				this->out << "beq $0, $0, test" << instr.var << endl
+						  << "end" << instr.var << ": " << endl;
+	
+			break;
+
 			default :
 			break;
 		}
 	}
 }
 
+void Mips::genTest(vector<string>& t, string id, string go) {
+	int a = this->getLocation(t[0]);
+	int b = this->getLocation(t[2]);
+	if(a < 0) {
+		this->out << "lw $5, " << a << "($29)" << endl;
+		a = 5;
+	}
+	if(b < 0) {
+		this->out << "lw $6, " << b << "($29)" << endl;
+		b = 6;
+	}
+
+	if(t[1] == "==") {
+		this->out << "bne $" << a << ", $" << b << ", " << go << endl;
+	}
+	else if(t[1] == "!=") {
+		this->out << "beq $" << a << ", $" << b << ", " << go << endl;
+	}
+	else if(t[1] == "<") {
+		this->out << "slt $7, $" << a << ", $" << b << endl
+				  << "beq $7, $0, " << go << endl;
+	}
+	else if(t[1] == "<=") {
+			this->out << "beq $" << a << ", $" << b << ", begin" << id << endl
+					  << "slt $7, $" << a << ", $" << b << endl
+				  	  << "beq $7, $0, " << go << endl;
+	}
+	else if(t[1] == ">") {
+		this->out << "beq $" << a << ", $" << b << ", " << go << endl
+				  << "slt $7, $" << a << ", $" << b << endl
+			  	  << "bne $7, $0, " << go << endl;
+	}
+	else if(t[1] == ">=") {
+		this->out << "slt $7, $" << a << ", $" << b << endl
+				  << "bne $7, $0, " << go << endl;
+	}
+}
+
 void Mips::operation(Instr& instr) {
 	int a = this->getLocation(instr.args[0]);
-	int b = this->getLocation(instr.args[0]);
+	int b = this->getLocation(instr.args[2]);
 	int var = this->getLocation(instr.var);
 
 	if(a < 0) {
@@ -153,7 +219,7 @@ void Mips::is(string a, string b) {
 			}
 			else {
 				this->out << "lis $" << this->getLocation(a) << endl
-						  << "word " << b << endl;
+						  << ".word " << b << endl;
 
 			}
 		}

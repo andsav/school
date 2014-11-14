@@ -9,4 +9,5 @@ asm:
 	cat input | ./scan | ./parse | ./gen | ./asm > 1.mips
 	@ls -l test/1.mips
 
-	
+zip:
+	zip submit.zip *.cc *h

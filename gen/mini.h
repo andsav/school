@@ -70,18 +70,28 @@ private:
 
 	vector<Instr> exprCode(string, Tree&);	// expr, term, factor
 	vector<Instr> statementsCode(Tree&);	// statements
+
 	vector<Instr> dclsCode(Tree&);			// dcls
-	vector<Instr> testCode(Tree&);			// test
-	vector<Instr> loopCode(Tree&);			// statement if
-	vector<Instr> ifCode(Tree&);			// statement while
+	string getLvalue(Tree&);				// lvalue
+	string getDcl(Tree&);					// dcl
+
+	vector<Instr> loopCode(Tree&);						// statement if
+	vector<Instr> ifCode(Tree&);						// statement while
+	vector<Instr> testCode(Tree&, string&, string&);	// test
+
 	vector<Instr> newCode(Tree&);			// factor new
 	vector<Instr> deleteCode(Tree&);		// statement delete
+
+	string makeTemp();
+	string makeIf();
+	string makeLoop();
 
 	procedures code;
 
 public:
 	Mini(Tree&, table&, vector<string>&);
-	procedures getCode();
+	procedures* getCode();
+	~Mini();
 
 };
 

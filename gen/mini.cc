@@ -27,8 +27,8 @@ bool Instr::empty() {
 ostream& operator<<(ostream& out, Instr& instr) {
 	if(!instr.empty()) {
 		out << instr.var << " " << instr.cmd;
-		for(int j=0; j<instr.args.size(); ++j) {
-			out << " " << instr.args[j];
+		FOREACH(instr.args) {
+			out << " " << instr.args[i];
 		}
 		out << endl;
 	}
@@ -43,6 +43,8 @@ Mini::Mini(Tree& parseTree, table& symbols, vector<string>& order) :
 		this->genCode(this->parseTree.children[1]); // procedures procedure procedures
 }
 
+Mini::~Mini() { }
+
 void Mini::genCode(Tree &t) {
 	if(t.lhs() == "procedure" || t.rhs()[0] == "main") {
 		Tree *dcls, *statements, *ret;
@@ -50,7 +52,7 @@ void Mini::genCode(Tree &t) {
 
 		if(t.rhs()[0] == "main") {
 			this->current 	= "wain";
-			dcls 			= &t.children[0].children[5];
+			dcls 			= &t.children[0].children[8];
 			statements 		= &t.children[0].children[9];
 			ret 			= &t.children[0].children[11];
 
@@ -137,12 +139,7 @@ vector<Instr> Mini::exprCode(string var, Tree& t) {
 		else if(t.toString() == "term term PCT factor")
 			operation = '%';
 
-		this->tempCount[this->current]++;
-
-		stringstream tc;
-		tc << tempCount[this->current];
-
-		string temp = string("t" + tc.str());
+		string temp = makeTemp();
 
 		vector<Instr> ret1, ret2;
 		ret2 = this->exprCode(temp, t.children[0]);
@@ -181,24 +178,175 @@ vector<Instr> Mini::statementsCode(Tree& t) {
 				'P'
 				));
 		}
+		else if(t.toString() == "statement lvalue BECOMES expr SEMI") {
+			string var = this->getLvalue(t.children[0]);
+			ret = this->exprCode(string("$3"), t.children[2]);
+			ret.push_back(Instr(
+				var,
+				'=',
+				string("$3")
+				));
+		}
+		else if(t.rhs()[0] == "WHILE") {
+			return this->loopCode(t);
+		}
+		else if(t.rhs()[0] == "IF") {
+			return this->ifCode(t);
+		}
 	}
 
 	return ret;
 }
+
+string Mini::getLvalue(Tree &t) {
+	if(t.toString() == "lvalue ID") {
+		return t.children[0].rhs()[0];
+	}
+	else if(t.toString() == "lvalue STAR factor") {
+		// @TODO
+		//
+		//
+		//
+		//
+	}
+	else {	// lvalue LPAREN lvalue RPAREN
+		return this->getLvalue(t.children[1]);
+	}
+}
+
+string Mini::getDcl(Tree &t) {
+	return t.children[1].rhs()[0];
+}
+
 vector<Instr> Mini::dclsCode(Tree& t){
 	vector<Instr> ret;
+	if(t.rhs().empty()) {
+		return ret;
+	}
+
+	if(t.rhs()[3] == "NUM") {
+		string var = this->getDcl(t.children[1]);
+
+		ret = this->dclsCode(t.children[0]);
+		ret.push_back(Instr(
+			var,
+			'=',
+			t.children[3].rhs()[0]));
+	}
+	else if(t.rhs()[3] == "NULL") {
+		// @TODO
+		//
+		//
+		//
+
+	}
+
 	return ret;
 }
 
-procedures Mini::getCode() {
-	return this->code;
+vector<Instr> Mini::testCode(Tree& t, string& temp1, string& temp2) { // test expr X expr
+	vector<Instr> ret, ret2;
+
+	ret = this->exprCode(temp1, t.children[0]);
+	ret2 = this->exprCode(temp2, t.children[2]);
+
+	ret.insert(ret.end(), ret2.begin(), ret2.end());
+
+	return ret;
+}
+
+vector<Instr> Mini::loopCode(Tree& t) {
+	vector<Instr> ret, ret2;
+
+	string temp1 = makeTemp();
+	string temp2 = makeTemp();
+	string testCode = string(temp1 + " " + t.children[2].children[1].rhs()[0] + " " + temp2);
+	string id = this->makeLoop();
+
+	ret.push_back(Instr(id, 'W'));
+
+	ret2 = this->testCode(t.children[2], temp1, temp2);
+	ret.insert(ret.end(), ret2.begin(), ret2.end());
+
+	ret.push_back(Instr(
+		id,
+		'T',
+		testCode));
+
+	ret2 = this->statementsCode(t.children[5]);
+	ret.insert(ret.end(), ret2.begin(), ret2.end());
+	ret.push_back(Instr(
+		id,
+		'w'));
+
+	return ret;
+}
+
+vector<Instr> Mini::ifCode(Tree& t) {
+	vector<Instr> ret, ret2;
+
+	string temp1 = makeTemp();
+	string temp2 = makeTemp();
+	string testCode = string(temp1 + " " + t.children[2].children[1].rhs()[0] + " " + temp2);
+	string id = this->makeIf();
+
+	ret = this->testCode(t.children[2], temp1, temp2);
+	ret.push_back(Instr(
+		id,
+		'I',
+		testCode));
+
+	ret2 = this->statementsCode(t.children[5]);
+	ret.insert(ret.end(), ret2.begin(), ret2.end());
+	ret.push_back(Instr(
+		id,
+		'e'));
+
+	ret2 = this->statementsCode(t.children[9]);
+	ret.insert(ret.end(), ret2.begin(), ret2.end());
+
+	ret.push_back(Instr(
+		id,
+		'i'));
+
+	return ret;
+}
+
+procedures* Mini::getCode() {
+	return &this->code;
+}
+
+// SUGAAAR
+string Mini::makeTemp() {
+	this->tempCount[this->current]++;
+
+	stringstream tc;
+	tc << tempCount[this->current];
+
+	return string("t" + tc.str());
+}
+
+string Mini::makeIf() {
+	this->ifCount++;
+	stringstream ic;
+	ic << ifCount;
+
+	return string("I" + ic.str());
+}
+
+string Mini::makeLoop() {
+	this->loopCount++;
+	stringstream ic;
+	ic << loopCount;
+
+	return string("W" + ic.str());
 }
 
 ostream& operator<<(ostream& out, Mini& mini) {
-	for(int i=0; i<mini.order.size(); ++i) {
-		cout << mini.order[i] << ":" << endl;
+	FOREACH(mini.order) {
+		out << mini.order[i] << ":" << endl;
 		for(int j=0; j<mini.code[mini.order[i]].size(); ++j) {
-			cout << mini.code[mini.order[i]][j];
+			out << mini.code[mini.order[i]][j];
 		}
 	}
 }

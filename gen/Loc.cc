@@ -16,7 +16,7 @@ bool sortByStartPoint::operator() (const string& a, const string& b) {
 *	REGISTER ALLOCATION
 */
 
-Loc::Loc(procedures& p) : p(p) {
+Loc::Loc(procedures& p) : p(p), offset(0) {
 	for(int i=28; i>14; --i) {
 		this->freeRegs.push(i);
 	}
@@ -35,7 +35,6 @@ void Loc::expire(string var) {
 		this->active.erase(
 			remove(this->active.begin(), this->active.end(), this->active[i]),
 			this->active.end());
-		cout << this->active[i] << " " << this->freeRegs.top() << endl;
 	}
 }
 
@@ -105,14 +104,14 @@ void Loc::genAlive(string current) {
 	// Build the instrVars table
 	// instrVars[procedure][ith instr] = {symbol1, symbol2, ...., symboln}
 	//
-	// this will make sure no symbols overlap in the same location
-	//
+	/*
 	typedef map<string, pair<int, int> >::iterator liveIterator;
 	for(liveIterator it = this->alive[current].begin(); it != this->alive[current].end(); ++it) {
 		for(int i=it->second.first; i<it->second.second; ++i) {
 			this->instrVars[current][i].push_back(it->first);
 		}
 	}
+	*/
 }
 
 void Loc::genAlive() {
@@ -174,6 +173,7 @@ ostream& operator<<(ostream& out, Loc& l) {
 
 	out << endl << endl;
 
+	/*
 	for(int i=0; i < l.instrVars["wain"].size(); ++i) {
 		out << i;
 		for(int j=0; j< l.instrVars["wain"][i].size(); ++j) {
@@ -183,6 +183,7 @@ ostream& operator<<(ostream& out, Loc& l) {
 	}
 
 	out << endl << endl;
+	*/
 
 	for(map<string, int>::iterator it = l.location["wain"].begin(); it != l.location["wain"].end(); ++it) {
 		if(isReg(it->first)) continue;

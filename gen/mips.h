@@ -29,6 +29,8 @@ private:
 	bool isStored(string&);
 	int getLocation(string&);
 
+	void genTest(vector<string>&, string, string);
+
 public:
 	Mips(procedures&, locTable&, int);
 

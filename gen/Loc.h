@@ -1,25 +1,13 @@
 #ifndef LOC_H
 #define LOC_H
 
-#define FOREACH_PROCEDURE(call) { 					\
-													\
-	(call)(string("wain"));							\
-													\
-	for(procedures::iterator it = this->p.begin(); 	\
-		it != this->p.end(); 						\
-		++it) {										\
-		if(it->first == "wain") continue;			\
-		(call)(it->first);							\
-	}												\
-}
-
-
 #include <algorithm>
 #include "Opt.h"
 
 typedef map<string, map<string, int> > 				locTable;
 typedef map<string, map<string, pair<int, int> > > 	liveTable;
-typedef map<string, map<int, vector<string> > > 	instrVarsTable;
+
+//typedef map<string, map<int, vector<string> > > 	instrVarsTable;
 
 class Loc{
 
@@ -36,7 +24,8 @@ private:
 
 	locTable 		location;
 	liveTable 		alive;
-	instrVarsTable 	instrVars;
+	
+	//instrVarsTable 	instrVars;
 
 	vector<string> 	active;
 

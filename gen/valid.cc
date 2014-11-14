@@ -1,4 +1,4 @@
-#include "Valid.h"
+#include "valid.h"
 
 string current = "";
 table symbols;
@@ -242,8 +242,8 @@ void Tree::printTree(int level) {
 }
 
 Tree readTree() {
-	Tree ret;
 	string s;
+	Tree ret;
 
 	getline(cin, s);
 	ret = makeTree(makeNode(s));
@@ -342,13 +342,13 @@ string genSignature(Tree &t) {
 			ret = " int*";
 	}
 
-	for(int i=0; i<t.children.size(); ++i) {
+	FOREACH(t.children) {
 		ret += genSignature(t.children[i]);
 	}
 	return ret;
 }
 
-table genSymbols(Tree &t) {
+table* genSymbols(Tree &t) {
 	string id, type, sign;
 	int lbound, rbound;
 
@@ -403,11 +403,11 @@ table genSymbols(Tree &t) {
 		throw string("ambiguous use of '" + t.children[0].rhs()[0] + "' in procedure '" + current + "'");
 	}
 	
-	for(int i=0; i<t.children.size(); ++i) {
+	FOREACH(t.children) {
 		genSymbols(t.children[i]);
 	}
 
-	return symbols;
+	return &symbols;
 }
 
 void testTypes(Tree &t) {
@@ -422,13 +422,13 @@ void testTypes(Tree &t) {
 
 	t.getType();
 
-	for(int i=0; i<t.children.size(); ++i) {
+	FOREACH(t.children) {
 		testTypes(t.children[i]);
 	}
 }
 
 void printSymbols() {
-	for(int i=0; i<order.size(); ++i) {
+	FOREACH(order) {
 		cerr << order[i] << " " << signature[order[i]] << endl;
 
 		for(cell::const_iterator it2 = symbols[order[i]].begin(); it2 != symbols[order[i]].end(); ++it2) {
@@ -440,12 +440,12 @@ void printSymbols() {
 	}
 }
 
-vector<string> getOrder() {
-	return order;
+vector<string>* getOrder() {
+	return &order;
 }
 
-cell getSignature() {
-	return signature;
+cell* getSignature() {
+	return &signature;
 }
 
 bool isNum(const string& s) {
