@@ -8,10 +8,7 @@ int wain(int a, int b) {
             if (b < 10) {
                product = 1;
                counter = 0;
-               while (counter < b) {
-                  product = product * a;
-                  counter = counter + 1;
-               }
+              
             } else {} // must have else
          } else {} 
       } else {} 

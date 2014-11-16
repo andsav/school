@@ -145,8 +145,18 @@ Block* Graph::createBlock(Block* origin1, Block* origin2) {
 	return ret;
 }
 
-ostream& operator<<(ostream& out, Graph& g) {
-	FOREACH(g.blocksPile.top().instr) {
-		out << g.blocksPile.top().instr[i];
+/*
+Run this if you like infinite loops :)
+ostream& operator<<(ostream& out, Block& b) {
+	FOREACH(b.instr) {
+		out << b.instr[i];
+	}
+	FOREACH(b.out) {
+		out << *b.out[i];
 	}
 }
+
+ostream& operator<<(ostream& out, Graph& g) {
+	out << g.f["wain"];
+}
+*/

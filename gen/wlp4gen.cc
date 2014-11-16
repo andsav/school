@@ -12,13 +12,13 @@ int main() {
 		symbols = genSymbols(parseTree);
 		order = getOrder();
 		signature = getSignature();
-		//testTypes(parseTree);
+		testTypes(parseTree);
+
 
 		Mini m(parseTree, *symbols, *order);
-		//cout << m;
-		
+		cout << m;
 		Graph graph(*m.getCode());
-		cout << graph;
+		//cout << graph;
 
 		//
 		//

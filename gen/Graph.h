@@ -22,7 +22,7 @@ typedef map<string, Block> functions;
 
 class Graph {
 
-friend ostream& operator<<(ostream&, Graph&);
+//friend ostream& operator<<(ostream&, Graph&);
 
 private:	
 	procedures& p;
