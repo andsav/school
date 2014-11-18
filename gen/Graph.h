@@ -3,46 +3,61 @@
 
 #include "Mini.h"
 
-struct Block {
-	vector<Instr> instr;
-	
-	vector<Block*> in;
-	vector<Block*> out;
+enum tt { TOP, K, BOT };
 
-	Block();
-	Block(Block*);
-	Block(Block*, Block*);
+struct State {
+	tt t;
+	int val;
 
-	Instr* entry();
-	Instr* exit();
+	State();
+	State(tt);
+	State(tt, int);
 };
 
-typedef map<string, Block> functions;
+struct Graph {
+	bool flag;
+	Instr instr;
+	
+	// At INSTR, SYMBOL flows from STATE to STATE
+	map<string, pair<State, State> > stateTable;
 
+	// At INSTR, is SYMBOL alive?
+	map<string, bool> liveTable;
 
-class Graph {
+	vector<Graph*> in;
+	vector<Graph*> out;
 
-//friend ostream& operator<<(ostream&, Graph&);
+	Graph();
+	Graph(Graph*);
+	Graph(Graph*, Graph*);
+	~Graph();
 
+	vector<Instr*> getFlat();
+};
+
+typedef map<string, Graph> functions;
+
+class Split {
 private:	
 	procedures& p;
 	functions f;
+	table& symbols;
+
 	string current;
+	Graph* currentGraph;
 
-	Block* currentBlock;
+	void gen(vector<Instr>&);
+	void gen(string);
 
-	stack<Block> blocksPile;
+	Graph* makeGraph(Graph*);
+	Graph* makeGraph(Graph*, Graph*);
+
+	stack<Graph*> pile;
 
 public:
-	Graph(procedures&);
-	
-	void split(vector<Instr>&);
-	void split(string);
-
+	Split(procedures&, table&);
+	~Split();
 	functions* getFunctions();
-
-	Block* createBlock(Block*);
-	Block* createBlock(Block*, Block*);
 };
 
 #endif

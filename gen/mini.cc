@@ -41,6 +41,8 @@ ostream& operator<<(ostream& out, Instr& instr) {
 Mini::Mini(Tree& parseTree, table& symbols, vector<string>& order) : 
 	parseTree(parseTree), symbols(symbols), order(order) {	
 		this->genCode(this->parseTree.children[1]); // procedures procedure procedures
+
+	this->genFullSymbols();
 }
 
 Mini::~Mini() { }
@@ -92,15 +94,15 @@ void Mini::genCode(Tree &t) {
 
 		// dcls
 		retCode = this->dclsCode(*dcls);
-		code.insert(code.end(), retCode.begin(), retCode.end());
+		APPEND(code, retCode);
 
 		// statements
 		retCode = this->statementsCode(*statements);
-		code.insert(code.end(), retCode.begin(), retCode.end());
+		APPEND(code, retCode);
 
 		 // RETURN expr
 		retCode = this->exprCode(returnTo, *ret);
-		code.insert(code.end(), retCode.begin(), retCode.end());
+		APPEND(code, retCode);
 
 	}
 	else {	// procedures procedure procedures
@@ -145,8 +147,9 @@ vector<Instr> Mini::exprCode(string var, Tree& t) {
 		ret2 = this->exprCode(temp, t.children[0]);
 		ret1 = this->exprCode(var, t.children[2]);
 
-		ret.insert(ret.end(), ret1.begin(), ret1.end());
-		ret.insert(ret.end(), ret2.begin(), ret2.end());
+		
+		APPEND(ret, ret1);
+		APPEND(ret, ret2);
 
 		ret.push_back(Instr(
 			var,
@@ -167,7 +170,7 @@ vector<Instr> Mini::statementsCode(Tree& t) {
 			ret = this->statementsCode(t.children[0]);
 			ret2 = this->statementsCode(t.children[1]);
 
-			ret.insert(ret.end(), ret2.begin(), ret2.end());
+			APPEND(ret, ret2);
 		}
 	}
 	else if(t.lhs() == "statement") {
@@ -250,7 +253,7 @@ vector<Instr> Mini::testCode(Tree& t, string& temp1, string& temp2) { // test ex
 	ret = this->exprCode(temp1, t.children[0]);
 	ret2 = this->exprCode(temp2, t.children[2]);
 
-	ret.insert(ret.end(), ret2.begin(), ret2.end());
+	APPEND(ret, ret2);
 
 	return ret;
 }
@@ -266,7 +269,7 @@ vector<Instr> Mini::loopCode(Tree& t) {
 	ret.push_back(Instr(id, 'W'));
 
 	ret2 = this->testCode(t.children[2], temp1, temp2);
-	ret.insert(ret.end(), ret2.begin(), ret2.end());
+	APPEND(ret, ret2);
 
 	ret.push_back(Instr(
 		id,
@@ -274,7 +277,7 @@ vector<Instr> Mini::loopCode(Tree& t) {
 		testCode));
 
 	ret2 = this->statementsCode(t.children[5]);
-	ret.insert(ret.end(), ret2.begin(), ret2.end());
+	APPEND(ret, ret2);
 	ret.push_back(Instr(
 		id,
 		'w'));
@@ -297,13 +300,13 @@ vector<Instr> Mini::ifCode(Tree& t) {
 		testCode));
 
 	ret2 = this->statementsCode(t.children[5]);
-	ret.insert(ret.end(), ret2.begin(), ret2.end());
+	APPEND(ret, ret2);
 	ret.push_back(Instr(
 		id,
 		'e'));
 
 	ret2 = this->statementsCode(t.children[9]);
-	ret.insert(ret.end(), ret2.begin(), ret2.end());
+	APPEND(ret, ret2);
 
 	ret.push_back(Instr(
 		id,
@@ -314,6 +317,26 @@ vector<Instr> Mini::ifCode(Tree& t) {
 
 procedures* Mini::getCode() {
 	return &this->code;
+}
+
+void Mini::genFullSymbols() {
+	for(table::iterator it = this->symbols.begin(); it != this->symbols.end(); ++it) {
+		string current = it->first;
+
+		for(cell::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+			this->fullSymbols[current][it2->first] = it2->second;
+		}
+
+		for(int i=1; i <= this->tempCount[current]; ++i) {
+			stringstream ss;
+			ss << i;
+			this->fullSymbols[current][string("t" + ss.str())] = "int";
+		}
+	}
+}
+
+table* Mini::getFullSymbols() {
+	return &this->fullSymbols;
 }
 
 // SUGAAAR

@@ -25,16 +25,20 @@
 													\
 	(call)(string("wain"));							\
 													\
-	for(functions::iterator it = this->p.begin(); 	\
-		it != this->p.end(); 						\
+	for(functions::iterator it = this->f.begin(); 	\
+		it != this->f.end(); 						\
 		++it) {										\
 		if(it->first == "wain") continue;			\
 		(call)(it->first);							\
 	}												\
 }
 
-#define FOREACH(obj) for(int i=0; i<obj.size(); ++i)
+#define FOREACH_SYMBOL() for(cell::iterator it = this->symbols[current].begin(); it != this->symbols[current].end(); ++it)
 
+#define FOREACH(obj) for(int i=0; i<obj.size(); ++i)
+#define FOREACH_(obj, i) for(int i=0; i<obj.size(); ++i)
+
+#define APPEND(v1, v2) v1.insert(v1.end(), v2.begin(), v2.end())
 
 using namespace std;
 

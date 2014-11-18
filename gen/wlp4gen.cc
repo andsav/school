@@ -1,5 +1,5 @@
 #include "valid.h"
-#include "Mips.h"m
+#include "Mips.h"
 
 int main() {
 
@@ -9,16 +9,33 @@ int main() {
 	cell* signature;
 
 	try{
+		/*
+		*
+		*	SEMANTIC TESTING (A8)
+		*
+		*/
 		symbols = genSymbols(parseTree);
 		order = getOrder();
 		signature = getSignature();
-		testTypes(parseTree);
+		//testTypes(parseTree);
+
+		/*
+		*
+		*	COMPILING (A9 - A11)
+		*		
+		*/
+
+		// 1) Generate intermediate code
+		Mini mini(parseTree, *symbols, *order);
+		cout << mini;
+		cout << endl << endl;
+
+		// 2) Build control flow graph
+		Split split(*mini.getCode(), *mini.getFullSymbols());
 
 
-		Mini m(parseTree, *symbols, *order);
-		cout << m;
-		Graph graph(*m.getCode());
-		//cout << graph;
+		// 3) Liveness analysis, constant propagation
+		Live live(*split.getFunctions(), *mini.getFullSymbols());
 
 		//
 		//

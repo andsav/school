@@ -66,6 +66,8 @@ private:
 	vector<string>& order;
 	table &symbols;
 
+	table fullSymbols;
+
 	void genCode(Tree&);					// entry point, procedures, wain
 
 	vector<Instr> exprCode(string, Tree&);	// expr, term, factor
@@ -88,9 +90,12 @@ private:
 
 	procedures code;
 
+	void genFullSymbols();
+
 public:
 	Mini(Tree&, table&, vector<string>&);
 	procedures* getCode();
+	table* getFullSymbols();
 	~Mini();
 
 };

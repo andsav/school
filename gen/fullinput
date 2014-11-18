@@ -16,71 +16,22 @@ INT int
 ID b
 RPAREN )
 LBRACE {
-dcls dcls dcl BECOMES NUM SEMI
-dcls dcls dcl BECOMES NUM SEMI
 dcls
-dcl type ID
-type INT
-INT int
-ID counter
-BECOMES =
-NUM 0
-SEMI ;
-dcl type ID
-type INT
-INT int
-ID product
-BECOMES =
-NUM 0
-SEMI ;
-statements statements statement
-statements statements statement
 statements statements statement
 statements
-statement lvalue BECOMES expr SEMI
-lvalue ID
-ID product
-BECOMES =
-expr expr MINUS term
-expr term
-term factor
-factor NUM
-NUM 0
-MINUS -
-term factor
-factor NUM
-NUM 1
-SEMI ;
-statement IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE
-IF if
+statement WHILE LPAREN test RPAREN LBRACE statements RBRACE
+WHILE while
 LPAREN (
-test expr GE expr
+test expr LT expr
 expr term
 term factor
 factor ID
 ID a
-GE >=
+LT <
 expr term
 term factor
 factor NUM
-NUM 0
-RPAREN )
-LBRACE {
-statements statements statement
-statements
-statement IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE
-IF if
-LPAREN (
-test expr GE expr
-expr term
-term factor
-factor ID
-ID b
-GE >=
-expr term
-term factor
-factor NUM
-NUM 0
+NUM 12
 RPAREN )
 LBRACE {
 statements statements statement
@@ -89,35 +40,22 @@ statement lvalue BECOMES expr SEMI
 lvalue ID
 ID a
 BECOMES =
+expr expr PLUS term
 expr term
 term factor
 factor ID
-ID b
-SEMI ;
-RBRACE }
-ELSE else
-LBRACE {
-statements
-RBRACE }
-RBRACE }
-ELSE else
-LBRACE {
-statements
-RBRACE }
-statement lvalue BECOMES expr SEMI
-lvalue ID
 ID a
-BECOMES =
-expr term
+PLUS +
 term factor
 factor NUM
 NUM 1
 SEMI ;
+RBRACE }
 RETURN return
 expr term
 term factor
 factor ID
-ID product
+ID a
 SEMI ;
 RBRACE }
 EOF EOF
