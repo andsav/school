@@ -9,9 +9,17 @@ private:
 	table& symbols;
 
 	string current;
+	string currentSymbol;
+	bool change;
 
-	void genState(string);
-	void genState();
+	void genState(Graph*, bool);
+	void genLive(Graph*, bool);
+
+	void gen(string);
+
+	void fold(Graph*, bool);
+	void clear(Graph*, bool);
+
 public:
 	Live(functions&, table&);
 

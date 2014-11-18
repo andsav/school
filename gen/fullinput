@@ -19,8 +19,82 @@ LBRACE {
 dcls
 statements statements statement
 statements
-statement WHILE LPAREN test RPAREN LBRACE statements RBRACE
-WHILE while
+statement IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE
+IF if
+LPAREN (
+test expr LT expr
+expr term
+term factor
+factor ID
+ID a
+LT <
+expr term
+term factor
+factor NUM
+NUM 12
+RPAREN )
+LBRACE {
+statements statements statement
+statements statements statement
+statements
+statement lvalue BECOMES expr SEMI
+lvalue ID
+ID a
+BECOMES =
+expr expr MINUS term
+expr expr PLUS term
+expr expr PLUS term
+expr term
+term factor
+factor NUM
+NUM 13
+PLUS +
+term factor
+factor NUM
+NUM 12
+PLUS +
+term factor
+factor NUM
+NUM 14
+MINUS -
+term factor
+factor NUM
+NUM 15
+SEMI ;
+statement IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE
+IF if
+LPAREN (
+test expr LT expr
+expr term
+term factor
+factor ID
+ID a
+LT <
+expr expr PLUS term
+expr term
+term factor
+factor NUM
+NUM 12
+PLUS +
+term factor
+factor ID
+ID a
+RPAREN )
+LBRACE {
+statements statements statement
+statements statements statement
+statements
+statement lvalue BECOMES expr SEMI
+lvalue ID
+ID a
+BECOMES =
+expr term
+term factor
+factor NUM
+NUM 13
+SEMI ;
+statement IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE
+IF if
 LPAREN (
 test expr LT expr
 expr term
@@ -40,16 +114,35 @@ statement lvalue BECOMES expr SEMI
 lvalue ID
 ID a
 BECOMES =
-expr expr PLUS term
 expr term
 term factor
-factor ID
+factor NUM
+NUM 13
+SEMI ;
+RBRACE }
+ELSE else
+LBRACE {
+statements statements statement
+statements
+statement lvalue BECOMES expr SEMI
+lvalue ID
 ID a
-PLUS +
+BECOMES =
+expr term
 term factor
 factor NUM
-NUM 1
+NUM 14
 SEMI ;
+RBRACE }
+RBRACE }
+ELSE else
+LBRACE {
+statements
+RBRACE }
+RBRACE }
+ELSE else
+LBRACE {
+statements
 RBRACE }
 RETURN return
 expr term

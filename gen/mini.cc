@@ -10,7 +10,7 @@ Instr::Instr(string var, char cmd, string args)
 Instr::Instr(char cmd, string args) 
 	: cmd(cmd) { this->splitArgs(args); }
 
-Instr::Instr() { cmd = 0; }
+Instr::Instr() : cmd(0) { }
 
 void Instr::splitArgs(const string& args) {
 	stringstream ss(args);
@@ -183,12 +183,14 @@ vector<Instr> Mini::statementsCode(Tree& t) {
 		}
 		else if(t.toString() == "statement lvalue BECOMES expr SEMI") {
 			string var = this->getLvalue(t.children[0]);
-			ret = this->exprCode(string("$3"), t.children[2]);
+			ret = this->exprCode(var, t.children[2]);
+			/*
 			ret.push_back(Instr(
 				var,
 				'=',
 				string("$3")
 				));
+			*/
 		}
 		else if(t.rhs()[0] == "WHILE") {
 			return this->loopCode(t);
@@ -332,6 +334,9 @@ void Mini::genFullSymbols() {
 			ss << i;
 			this->fullSymbols[current][string("t" + ss.str())] = "int";
 		}
+
+		//this->fullSymbols[current]["$3"] = "int";
+		//this->fullSymbols[current]["$1"] = "int";
 	}
 }
 

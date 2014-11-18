@@ -6,8 +6,38 @@
 
 State::State() { }
 State::State(tt t) : t(t) { }
-State::State(tt t, int val) : t(t), val(val) { }
+State::State(tt t, string val) : t(t), val(val) { }
 
+State State::lub(const State& s2) {
+	if(this->t == TOP) {
+		return *this;
+	}
+	else if(s2.t == TOP) {
+		return s2;
+	}
+	else if(this->t == K && s2.t == K) {
+		if(this->val == s2.val) {
+			return s2;
+		}
+		else return State(TOP);
+	}
+	else if(this->t == K && s2.t == BOT) {
+		return *this;
+	}
+	else if(this->t == BOT && s2.t == K) {
+		return s2;
+	}
+	else {
+		return State(BOT);
+	}
+}
+
+bool State::operator==(const State& s2) const {
+	return (this->t == s2.t && this->val == s2.val);
+}
+bool State::operator!=(const State& s2) const {
+	return (this->t != s2.t || this->val != s2.val);
+}
 /*
 *	GRAPH
 */
@@ -25,6 +55,10 @@ Graph::Graph(Graph* origin1, Graph* origin2) : flag(0) {
 
 Graph::~Graph() { }
 
+void Graph::del() {
+	this->instr = Instr();
+}
+
 /*
 *	SPLIT
 */
@@ -41,11 +75,12 @@ void Split::gen(string current) {
 	this->currentGraph = &this->f[current];
 
 	FOREACH_SYMBOL() {
-		this->currentGraph->liveTable[it->first] = false;
+		this->currentGraph->liveTable[it->first] = make_pair(false, false);
 		this->currentGraph->stateTable[it->first] = make_pair(State(TOP), State(BOT));
 	}
 
 	this->gen(this->p[current]);
+	this->f[current].last = this->pile.top();
 }
 
 void Split::gen(vector<Instr>& instr) {
@@ -75,7 +110,7 @@ void Split::gen(vector<Instr>& instr) {
 			ifBlock = this->currentGraph;
 			this->currentGraph = ifBlock;
 
-			for(begin = end+1; end->var != thisInstr.var || end->cmd != 'i'; ++end) {
+			for(begin = end-1; end->var != thisInstr.var || end->cmd != 'i'; ++end) {
 				++i;
 			}
 			++end;
@@ -89,8 +124,8 @@ void Split::gen(vector<Instr>& instr) {
 		else if(thisInstr.cmd == 'W') {
 			++i;
 
-			Graph* loopBlock = this->makeGraph(this->currentGraph);
-			Graph* testBlock = this->makeGraph(loopBlock);
+			Graph* testBlock = this->makeGraph(this->currentGraph);
+			Graph* loopBlock = this->makeGraph(testBlock);
 
 			loopBlock->out.push_back(testBlock);
 
@@ -108,7 +143,7 @@ void Split::gen(vector<Instr>& instr) {
 			testBlock = this->currentGraph;
 			this->currentGraph = loopBlock;
 
-			for(begin = end+1; end->var != thisInstr.var || end->cmd != 'w'; ++end) {
+			for(begin = end-1; end->var != thisInstr.var || end->cmd != 'w'; ++end) {
 				++i;
 			}
 			++end;
@@ -133,7 +168,7 @@ Graph* Split::makeGraph(Graph* origin) {
 	pile.push(newGraph);
 	
 	FOREACH_SYMBOL() {
-		newGraph->liveTable[it->first] = false;
+		newGraph->liveTable[it->first] = make_pair(false, false);
 		newGraph->stateTable[it->first] = make_pair(State(BOT), State(BOT));
 	}
 
@@ -149,7 +184,7 @@ Graph* Split::makeGraph(Graph* origin, Graph* origin2) {
 	pile.push(newGraph);
 
 	FOREACH_SYMBOL() {
-		newGraph->liveTable[it->first] = false;
+		newGraph->liveTable[it->first] = make_pair(false, false);
 		newGraph->stateTable[it->first] = make_pair(State(BOT), State(BOT));
 	}
 

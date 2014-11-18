@@ -7,22 +7,28 @@ enum tt { TOP, K, BOT };
 
 struct State {
 	tt t;
-	int val;
+	string val;
 
 	State();
 	State(tt);
-	State(tt, int);
+	State(tt, string);
+
+	State lub(const State&);
+
+	bool operator==(const State&) const;
+	bool operator!=(const State&) const;
 };
 
 struct Graph {
 	bool flag;
 	Instr instr;
-	
+	Graph* last;
+
 	// At INSTR, SYMBOL flows from STATE to STATE
 	map<string, pair<State, State> > stateTable;
 
 	// At INSTR, is SYMBOL alive?
-	map<string, bool> liveTable;
+	map<string, pair<bool, bool> > liveTable;
 
 	vector<Graph*> in;
 	vector<Graph*> out;
@@ -31,6 +37,8 @@ struct Graph {
 	Graph(Graph*);
 	Graph(Graph*, Graph*);
 	~Graph();
+
+	void del();
 
 	vector<Instr*> getFlat();
 };
