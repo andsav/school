@@ -27,15 +27,22 @@ int main() {
 
 		// 1) Generate intermediate code
 		Mini mini(parseTree, *symbols, *order);
-		cout << mini;
-		cout << endl << endl;
+		//cout << mini;
+		//cout << endl << endl;
 
 		// 2) Build control flow graph
 		Split split(*mini.getCode(), *mini.getFullSymbols());
 
-
-		// 3) Liveness analysis, constant propagation
+		// 3) Liveness analysis, constant propagation, optimize
 		Live live(*split.getFunctions(), *mini.getFullSymbols());
+		//cout << live;
+		//cout << endl << endl;
+
+		// 4) Register allocation
+		Loc loc(*live.getProcedures(), *live.getLive());
+
+		// 5) Generate MIPS code
+
 
 		//
 		//
@@ -44,8 +51,8 @@ int main() {
 		//Loc loc(p);
 		//locTable l = loc.getLocation();
 
-		//Mips mips(p, l, loc.getOffset());
-		//cout << mips;
+		Mips mips(*mini.getCode(), *loc.getLocation(), loc.getOffset());
+		cout << mips;
 	}
 	catch(string err) {
 		cerr << "ERROR (" << err << ")" << endl;

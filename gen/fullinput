@@ -18,9 +18,10 @@ RPAREN )
 LBRACE {
 dcls
 statements statements statement
+statements statements statement
 statements
-statement IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE
-IF if
+statement WHILE LPAREN test RPAREN LBRACE statements RBRACE
+WHILE while
 LPAREN (
 test expr LT expr
 expr term
@@ -30,125 +31,56 @@ ID a
 LT <
 expr term
 term factor
-factor NUM
-NUM 12
+factor ID
+ID b
 RPAREN )
 LBRACE {
 statements statements statement
 statements statements statement
 statements
-statement lvalue BECOMES expr SEMI
-lvalue ID
-ID a
-BECOMES =
-expr expr MINUS term
-expr expr PLUS term
-expr expr PLUS term
-expr term
-term factor
-factor NUM
-NUM 13
-PLUS +
-term factor
-factor NUM
-NUM 12
-PLUS +
-term factor
-factor NUM
-NUM 14
-MINUS -
-term factor
-factor NUM
-NUM 15
-SEMI ;
-statement IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE
-IF if
+statement PRINTLN LPAREN expr RPAREN SEMI
+PRINTLN println
 LPAREN (
-test expr LT expr
 expr term
 term factor
 factor ID
 ID a
-LT <
+RPAREN )
+SEMI ;
+statement lvalue BECOMES expr SEMI
+lvalue ID
+ID a
+BECOMES =
 expr expr PLUS term
 expr term
 term factor
-factor NUM
-NUM 12
+factor ID
+ID a
 PLUS +
 term factor
-factor ID
-ID a
-RPAREN )
-LBRACE {
-statements statements statement
-statements statements statement
-statements
-statement lvalue BECOMES expr SEMI
-lvalue ID
-ID a
-BECOMES =
-expr term
-term factor
 factor NUM
-NUM 13
+NUM 1
 SEMI ;
-statement IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE
-IF if
+RBRACE }
+statement PRINTLN LPAREN expr RPAREN SEMI
+PRINTLN println
 LPAREN (
-test expr LT expr
 expr term
 term factor
 factor ID
-ID a
-LT <
-expr term
-term factor
-factor NUM
-NUM 12
+ID b
 RPAREN )
-LBRACE {
-statements statements statement
-statements
-statement lvalue BECOMES expr SEMI
-lvalue ID
-ID a
-BECOMES =
-expr term
-term factor
-factor NUM
-NUM 13
 SEMI ;
-RBRACE }
-ELSE else
-LBRACE {
-statements statements statement
-statements
-statement lvalue BECOMES expr SEMI
-lvalue ID
-ID a
-BECOMES =
-expr term
-term factor
-factor NUM
-NUM 14
-SEMI ;
-RBRACE }
-RBRACE }
-ELSE else
-LBRACE {
-statements
-RBRACE }
-RBRACE }
-ELSE else
-LBRACE {
-statements
-RBRACE }
 RETURN return
+expr expr PLUS term
 expr term
 term factor
 factor ID
 ID a
+PLUS +
+term factor
+factor ID
+ID b
 SEMI ;
 RBRACE }
 EOF EOF

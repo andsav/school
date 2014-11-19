@@ -39,6 +39,7 @@ ostream& operator<<(ostream& out, Instr& instr) {
 */
 
 Mini::Mini(Tree& parseTree, table& symbols, vector<string>& order) : 
+	loopCount(0), ifCount(0),
 	parseTree(parseTree), symbols(symbols), order(order) {	
 		this->genCode(this->parseTree.children[1]); // procedures procedure procedures
 
@@ -183,14 +184,12 @@ vector<Instr> Mini::statementsCode(Tree& t) {
 		}
 		else if(t.toString() == "statement lvalue BECOMES expr SEMI") {
 			string var = this->getLvalue(t.children[0]);
-			ret = this->exprCode(var, t.children[2]);
-			/*
+			ret = this->exprCode("$8", t.children[2]);
 			ret.push_back(Instr(
 				var,
 				'=',
-				string("$3")
+				string("$8")
 				));
-			*/
 		}
 		else if(t.rhs()[0] == "WHILE") {
 			return this->loopCode(t);

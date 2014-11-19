@@ -13,9 +13,9 @@ void Mips::genComment(Instr& instr) {
 }
 
 void Mips::prologue() {
-	this->offset++;
+	this->offset += 2;
 	this->out << ".import print" << endl << endl
-			  << "sw $31, -" << (4*this->offset) << "($30)"<< endl
+			  << "sw $31, -" << (4*this->offset-4) << "($30)"<< endl
 			  << "add $29, $30, $0" << endl
 			  << "lis $10" << endl << ".word print" << endl
 			  << "lis $11" << endl << ".word 1" << endl;
@@ -38,7 +38,10 @@ void Mips::prologue() {
 
 void Mips::epilogue() {
 	this->out << ";;;;;;; BEGIN EPILOGUE ;;;;;;;" << endl
-			  << "lw $31, -4($29)" << endl << "jr $31" << endl
+			  << "lis $4" << endl 
+    		  << ".word " << (4*this->offset) << endl
+    	      << "add $30, $30, $4" << endl
+			  << "lw $31, -" << (4*this->offset-4) << "($30)" << endl << "jr $31" << endl
 			  << ";;;;;;;; END EPILOGUE ;;;;;;;;" << endl;
 }
 
@@ -78,8 +81,7 @@ void Mips::genCode(string current) {
 			break;
 
 			case 'e' :
-				this->out << "beq $0, $0, end" << instr.var << endl
-						  << "else" << instr.var << ": " << endl;
+				this->out << "else" << instr.var << ": " << endl;
 			break;
 
 			case 'i' :
@@ -88,9 +90,12 @@ void Mips::genCode(string current) {
 
 			case 'W' :
 				this->out << "test" << instr.var << ": " << endl;
+
+			break;
+
+			case 'T' :
 				this->genTest(instr.args, instr.var, string("end" + instr.var));
 				this->out << "begin" << instr.var << ": " << endl;
-
 			break;
 
 			case 'w':
@@ -195,7 +200,7 @@ void Mips::is(string a, string b) {
 		}
 		else {
 			if(this->isStored(b)) {
-				this->out << "lw " << a << ", " << this->getLocation(a) << "($29)" << endl;
+				this->out << "lw " << a << ", " << this->getLocation(b) << "($29)" << endl;
 			}
 			else {
 				this->out << "add " << a << ", $0, $" << this->getLocation(b) << endl;

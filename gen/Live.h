@@ -6,6 +6,8 @@
 typedef map<string, map<string, pair<int, int> > > 	liveTable;
 
 class Live {
+friend ostream& operator<<(ostream&, Live&);
+
 private:
 	functions& f;
 	table& symbols;
@@ -26,8 +28,10 @@ private:
 	void fold(Graph*, bool);
 	void clear(Graph*, bool);
 
+	void bullshit(string);
 	void optimize(string);
 	void finalize(string);
+	void peephole();
 
 	void genProcedures(Graph*, bool);
 

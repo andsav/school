@@ -21,6 +21,18 @@
 	}												\
 }
 
+#define FOREACH_PROCEDURE2(call) { 										\
+																		\
+	(call)(string("wain"));												\
+																		\
+	for(map<string, vector<Graph*> >::iterator it = this->p.begin(); 	\
+		it != this->p.end(); 											\
+		++it) {															\
+		if(it->first == "wain") continue;								\
+		(call)(it->first);												\
+	}																	\
+}
+
 #define FOREACH_FUNCTION(call) { 					\
 													\
 	(call)(string("wain"));							\
