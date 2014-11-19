@@ -36,6 +36,7 @@ void Live::gen(string current) {
 	}
 
 	FOREACH_SYMBOL() {
+		cout << endl << endl;
 		this->currentSymbol = it->first;
 		this->clear(&this->f[current], this->f[current].flag);
 	}
@@ -166,7 +167,7 @@ void Live::clear(Graph* g, bool origin) {
 		g->del();
 	}
 
-	//cout << g->instr;
+	cout << g->instr;
 
 	FOREACH(g->out) {
 		if(g->out[i]->flag != origin) continue;

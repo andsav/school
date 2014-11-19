@@ -125,9 +125,6 @@ void Split::gen(vector<Instr>& instr) {
 			++i;
 
 			Graph* testBlock = this->makeGraph(this->currentGraph);
-			Graph* loopBlock = this->makeGraph(testBlock);
-
-			loopBlock->out.push_back(testBlock);
 
 			this->currentGraph = testBlock;
 
@@ -141,9 +138,12 @@ void Split::gen(vector<Instr>& instr) {
 			this->gen(subInstr);
 
 			testBlock = this->currentGraph;
+
+			Graph* loopBlock = this->makeGraph(testBlock);
+
 			this->currentGraph = loopBlock;
 
-			for(begin = end-1; end->var != thisInstr.var || end->cmd != 'w'; ++end) {
+			for(begin = end; end->var != thisInstr.var || end->cmd != 'w'; ++end) {
 				++i;
 			}
 			++end;
@@ -151,8 +151,10 @@ void Split::gen(vector<Instr>& instr) {
 			subInstr = vector<Instr>(begin, end);
 			this->gen(subInstr);
 
-			loopBlock = this->currentGraph;
-			this->currentGraph = this->makeGraph(testBlock, loopBlock);
+			loopBlock = this->currentGraph;			
+			loopBlock->out.push_back(testBlock);
+
+			this->currentGraph = this->makeGraph(testBlock);
 		}
 		else if(i < instr.size()-1) {	
 			this->currentGraph = this->makeGraph(this->currentGraph);

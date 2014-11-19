@@ -6,51 +6,14 @@ int wain(int a, int b) {
          if(a < 12) {
             a = 13;
          } else {
-            while(a < b) {
+            if(a < b) {
                a = a + 2;
-               if(a < 12) {
-      a = 13 + 12 + 14 - 15;
-      if(a < 12 + a) {
-         a = 13;
-         if(a < 12) {
-         if(a < 12) {
-      a = 13 + 12 + 14 - 15;
-      if(a < 12 + a) {
-         a = 13;
-         if(a < 12) {
-            a = 13;
-         } else {
-            while(a < b) {
-               a = a + 2;
-               if(a < 12) {
-      a = 13 + 12 + 14 - 15;
-      if(a < 12 + a) {
-         a = 13;
-         if(a < 12) {
-            a = 13;
-         } else {
-            while(a < b) {
-               a = a + 2;
-            }
-            a = 14;
-         }
-      } else { }
-   } else { }
-            }
-            a = 14;
-         }
-      } else { }
-   } else { }
-            a = 13;
-         } else {
-            while(a < b) {
-               a = a + 2;
-            }
-            a = 14;
-         }
-      } else { }
-   } else { }
-            }
+               if(b != (a-32)) {
+                  while(a + a != b) {
+                     a = b%a;
+                  }
+               } else { }
+            } else { }
             a = 14;
          }
       } else { }
