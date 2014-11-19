@@ -2,6 +2,11 @@
 
 Live::Live(functions& f, table& symbols) : f(f), symbols(symbols) { 
 	FOREACH_FUNCTION(gen);
+	FOREACH_FUNCTION(finalize);
+
+	FOREACH_SYMBOL() {
+		cout << it->first << ": " << this->live[this->current][it->first].first << " - " << this->live[this->current][it->first].second << endl;
+	}
 }
 
 void Live::gen(string current) {
@@ -36,8 +41,11 @@ void Live::gen(string current) {
 	}
 
 	FOREACH_SYMBOL() {
-		cout << endl << endl;
+		// Variable is alive from?
+		this->live[current][this->currentSymbol] = make_pair(0, 0);
+
 		this->currentSymbol = it->first;
+		
 		this->clear(&this->f[current], this->f[current].flag);
 	}
 }
@@ -167,10 +175,62 @@ void Live::clear(Graph* g, bool origin) {
 		g->del();
 	}
 
-	cout << g->instr;
-
 	FOREACH(g->out) {
 		if(g->out[i]->flag != origin) continue;
 		this->clear(g->out[i], origin);
 	}
+}
+
+void Live::optimize(string current) {
+	// TODO
+}
+
+void Live::finalize(string current) {
+	this->current = current;
+
+	this->genProcedures(&this->f[this->current], this->f[this->current].flag);
+
+	FOREACH_SYMBOL() {
+		for(int i=this->p[current].size()-1; i>=0; --i) {
+			if(this->p[current][i]->liveTable[it->first].second) {
+				this->live[current][it->first].second = i;
+				break;
+			}
+		}
+		if(this->live[current][it->first].second == 0) {
+			this->live[current].erase(it->first);
+			this->symbols[current].erase(it);
+		}
+		else {
+			FOREACH(this->p[current]) {
+				if(this->p[current][i]->liveTable[it->first].second) {
+					this->live[current][it->first].first = i;
+					break;
+				}
+			}
+		}
+	}
+
+
+}
+
+void Live::genProcedures(Graph* g, bool origin) {
+	g->flag = !origin;
+
+	if(!g->instr.empty()){
+		this->p[this->current].push_back(g);
+	}
+
+	FOREACH(g->out) {
+		if(g->out[i]->flag != origin) continue;
+		this->genProcedures(g->out[i], origin);
+	}
+}
+
+map<string, vector<Graph*> >* Live::getProcedures() {
+	return &this->p;
+}
+
+liveTable* Live::getLive() {
+	return &this->live;
 }
