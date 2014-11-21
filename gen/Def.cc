@@ -50,6 +50,7 @@ Symbol::Symbol(string name, bool isInt) : name(name), isInt(isInt) { }
 */
 Args::Args() : var1(string()), cmd(0), var2(string()) { }
 Args::Args(string var1, char cmd, string var2) : var1(var1), cmd(cmd), var2(var2) { }
+Args::Args(string& var1, char cmd) : var1(var1), cmd(cmd) { }
 Args::Args(string& s) : cmd(0) {
 	stringstream ss(s);
 
@@ -61,15 +62,16 @@ Args::Args(string& s) : cmd(0) {
 	}
 }
 int Args::size() {
-	if(this->cmd != 0) {
-		return 3;
-	}
-	else if(!this->var1.empty()) {
-		return 1;
-	}
-	else {
-		return 0;
-	}
+	int ret = 0;
+	if(!this->var1.empty())
+		++ret;
+	if(this->cmd != 0)
+		++ret;
+	if(!this->var2.empty())
+		++ret;
+
+
+	return ret;
 }
 
 ostream& operator<<(ostream& out, Args& args) {
@@ -301,7 +303,7 @@ bool isNum(const string& s) {
 	if(s.empty())
 		return false;
 
-	if(s[0] == '-') 
+	if(s[0] == '0') 
 		return true;
 
     string::const_iterator it = s.begin();
@@ -318,5 +320,5 @@ bool isReg(const string& s) {
 bool isVar(const string& s) {
 	if(s.empty())
 		return false;
-	return (s[0] != '_' && !isReg(s) && !isNum(s));
+	return (s[0] != '0' && !isReg(s) && !isNum(s));
 }

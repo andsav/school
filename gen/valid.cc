@@ -83,6 +83,9 @@ Tree* Valid::readTree() {
 			ret->children.push_back(readTree());
 		}
 	}
+	else if(ret->lhs == "ID") {
+		ret->rhs[0] = string("v" + ret->rhs[0]);
+	}
 
 	return ret;
 }
@@ -159,11 +162,12 @@ void Valid::dclsCode(Tree* t) {
 		current->addInstr(new Instr(var, '=', t->children[3]->rhs[0]));
 	}
 	else if(t->rhs[3] == "NULL") {
-		// @TODO
-		//
-		//
-		//
+		string var = getDcl(t->children[1]);
 
+		dclsCode(t->children[0]);
+		current->addSymbol(new Symbol(var, 0));
+
+		// NO INSTRUCTION PRODUCED
 	}
 }
 
@@ -173,11 +177,13 @@ string Valid::getLvalue(Tree* t) {
 		return s;
 	}
 	else if(*t == "lvalue STAR factor") {
-		// @TODO
-		//
-		//
-		//
-		//
+		string temp = makeTemp();
+		string s = makePTemp();
+
+		exprCode(s, t->children[1]);
+		current->addInstr(new Instr(temp, '=', Args(s, '@'))); 
+		
+		return temp;
 	}
 	else {	// lvalue LPAREN lvalue RPAREN
 		return getLvalue(t->children[1]);
@@ -258,7 +264,7 @@ void Valid::loopCode(Tree* t) { // WHILE LPAREN test RPAREN LBRACE statements RB
 	statementsCode(t->children[5]);
 	loopBlock = current->instr.back();
 
-	current->addInstr(new Instr(id, 'W'), testBlock);
+	current->addInstr(new Instr(id, 'w'), testBlock);
 	testBlock->in.push_back(loopBlock);
 }
 
@@ -266,11 +272,27 @@ void Valid::exprCode(const string& var, Tree *t) {
 	if(*t == "expr term" || *t == "term factor") {
 		exprCode(var, t->children[0]);
 	}
-	else if(*t == "factor LPAREN expr RPAREN") {
-		exprCode(var, t->children[1]);
-	}
-	else if(*t == "factor ID" || *t == "factor NUM") {
-		current->addInstr(new Instr(var, '=', t->children[0]->rhs[0]), current->instr.back()); 
+	else if(t->lhs =="factor") {
+		if(t->rhs[0] == "LPAREN") {  // factor LPAREN expr RPAREN
+			exprCode(var, t->children[1]);
+		}
+		else if(t->rhs[0] == "NULL") { // factor NULL
+			throw string("Attempting to dereference NULL");
+		}
+		else if(t->rhs[0] == "ID" || t->rhs[0] == "NUM") {
+			current->addInstr(new Instr(var, '=', t->children[0]->rhs[0]), current->instr.back()); 
+		}
+		else if(t->rhs[0] == "AMP") { // factor AMP lvalue
+			string id = getLvalue(t->children[1]);
+
+			current->addInstr(new Instr(var, '=', Args(id, '&'))); 
+		}
+		else if(t->rhs[0] == "STAR") {
+			string temp = makePTemp();
+
+			exprCode(temp, t->children[1]);
+			current->addInstr(new Instr(var, '=', Args(temp, '@'))); 
+		}
 	}
 	else if ((t->lhs == "expr" || t->lhs == "term") && t->rhs.size() == 3) {
 		char operation;
@@ -306,7 +328,7 @@ string Valid::makeIf() {
 	stringstream ic;
 	ic << ifCount;
 
-	return string("_I" + ic.str());
+	return string("0I" + ic.str());
 }
 
 string Valid::makeLoop() {
@@ -314,7 +336,7 @@ string Valid::makeLoop() {
 	stringstream ic;
 	ic << loopCount;
 
-	return string("_W" + ic.str());
+	return string("0W" + ic.str());
 }
 
 string Valid::makeTemp() {
@@ -325,7 +347,20 @@ string Valid::makeTemp() {
 
 	string t = string("t" + tc.str());
 
-	current->addSymbol(new Symbol(t));
+	current->addSymbol(new Symbol(t, 1));
+
+	return t;
+}
+
+string Valid::makePTemp() {
+	++tempCount;
+
+	stringstream tc;
+	tc << tempCount;
+
+	string t = string("p" + tc.str());
+
+	current->addSymbol(new Symbol(t, 0));
 
 	return t;
 }

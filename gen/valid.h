@@ -30,6 +30,7 @@ namespace Valid {
 	string makeIf();
 	string makeLoop();
 	string makeTemp();
+	string makePTemp();
 
 }
 

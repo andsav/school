@@ -7,7 +7,12 @@ int main() {
 
 		//cout << parseTree;
 
+		//throw string("STOP");
+
 		Valid::genCode();
+
+		//cout << *current;
+		//throw(string("die"));
 
 		FOREACH(current->symbols) {
 			current->symbols[i]->use.second = current->instr.size()-1;

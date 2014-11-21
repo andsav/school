@@ -38,6 +38,9 @@ void Mips::body() {
 					if(instr->args.size() == 1) {
 						is(instr->var, instr->args.var1);
 					}
+					else if(instr->args.size() == 2) {
+						pointersFun(instr);
+					}
 					else {
 						operation(instr);
 					}
@@ -92,6 +95,10 @@ void Mips::epilogue() {
 		 << ".word " << (4*offset) << endl
 	     << "add $30, $30, $4" << endl
 		 << "lw $31, -" << (4*offset-4) << "($30)" << endl << "jr $31" << endl;
+}
+
+void Mips::pointersFun(Instr* instr) {
+	throw string("hello");
 }
 
 void Mips::operation(Instr* instr) {

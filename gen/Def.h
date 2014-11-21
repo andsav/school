@@ -8,6 +8,7 @@
 #include <stack>
 #include <map>
 #include <deque>
+#include <algorithm>
 
 using namespace std;
 
@@ -61,6 +62,7 @@ struct Args {
 
 	Args();
 	Args(string&);
+	Args(string&, char);
 	Args(string, char, string);
 
 	int size();
