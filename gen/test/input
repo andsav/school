@@ -1,8 +1,20 @@
 int wain(int a, int b) {
-    while(a < b) {
-        println(a);
-        a = a + 1;
-    }
-    println(b);
-    return a+b;
+   int counter = 0;
+   int product = 0;
+   product = 0-1;  // only binary minus
+   if (a >= 0) {
+      if (b >= 0) {
+         if (a < 10) {
+            if (b < 10) {
+               product = 1;
+               counter = 0;
+               while (counter < b) {
+                  product = product * a;
+                  counter = counter + 1;
+               }
+            } else {} // must have else
+         } else {} 
+      } else {} 
+   } else {}
+   return product;
 }

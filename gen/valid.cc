@@ -1,292 +1,27 @@
-#include "valid.h"
+#include "Valid.h"
 
-string current = "";
-table symbols;
-cell signature;
-vector<string> order;
+Tree parseTree;
+int tempCount = 0;
+int ifCount = 0;
+int loopCount = 0;
+int offset = 0;;
 
-string Tree::toString() {
-	string ret = this->content.first;
-	for(int i=0; i<this->content.second.size(); ++i) {
-		ret += string(" ") + this->content.second[i];
-	}
-	return ret;
+char Valid::operation(const string &s) {
+	if(s == "==")
+		return '=';
+	else if(s == "!=")
+		return 'N';
+	else if(s == "<")
+		return '<';
+	else if(s == ">")
+		return '>';
+	else if(s == "<=")
+		return 'L';
+	else if(s == ">=")
+		return 'G';
 }
 
-string Tree::lhs() {
-	return this->content.first;
-}
-
-vector<string> Tree::rhs() {
-	return this->content.second;
-}
-
-string Tree::getType() {
-	//cerr << this->toString() << endl;
-
-	if(!this->type.empty())
-		return this->type;
-
-	string ret = "";
-
-	try {
-		if(this->lhs() == "ID") {
-			if(isSymbol(current, this->rhs()[0])) {
-				ret = symbols[current][this->rhs()[0]];
-			}
-			else if(isProcedure(this->rhs()[0])) {
-				ret = signature[this->rhs()[0]];
-			}
-			else {
-				ret = string("You shouldn't ever see this"); 
-			}
-		}
-		if(this->lhs() == "NUM") {
-			ret = string("int");
-		}
-		else if(this->lhs() == "NULL") {
-			ret = string("int*");
-		}
-		else if(this->lhs() == "factor") {
-			if(this->rhs().size() == 1 && (this->rhs()[0] == "ID" || this->rhs()[0] == "NUM" || this->rhs()[0] == "NULL")) {
-				ret = this->children[0].getType();
-			}
-			else if(this->toString() == "factor LPAREN expr RPAREN") {
-				ret = this->children[1].getType();
-			}
-			else if(this->toString() == "factor AMP lvalue") {
-				if(this->children[1].getType() != "int") {
-					throw string("Expected int, got " + this->children[1].getType());
-				}
-				ret = "int*";
-			}
-			else if(this->toString() == "factor STAR factor") {
-				if(this->children[1].getType() != "int*") {
-					throw string("Expected int*, got " + this->children[1].getType());
-				}
-				ret = "int";
-			}
-			else if(this->toString() == "factor NEW INT LBRACK expr RBRACK") {
-				if(this->children[3].getType() != "int") {
-					throw string("Expected int, got " + this->children[1].getType());
-				}
-				ret = "int*";
-			}
-			else if(this->toString() == "factor ID LPAREN RPAREN") {
-				if(!signature[this->children[0].rhs()[0]].empty()) {
-					throw string("Expected procedure " + this->children[0].rhs()[0] + " to have empty signature");
-				}
-				ret = "int";
-			}
-			else if(this->toString() == "factor ID LPAREN arglist RPAREN") {
-				if(signature[this->children[0].rhs()[0]] != this->children[2].getType()) {
-					throw string("Expected procedure " + this->children[0].rhs()[0] + " called with invalid argumets");
-				}
-				ret = "int";
-			}
-		}
-		else if(this->lhs() == "arglist") {
-			if(this->toString() == "arglist expr") {
-				ret = this->children[0].getType();
-			}
-			else {
-				ret = string(this->children[0].getType() + " " + this->children[2].getType());
-			}
-		}
-		else if(this->lhs() == "lvalue") {
-			if(this->rhs()[0] == "ID") {
-				ret = this->children[0].getType();
-			}
-			else if(this->toString() == "lvalue LPAREN lvalue RPAREN") {
-				ret = this->children[1].getType();
-			}
-			else if(this->toString() == "lvalue STAR factor") {
-				if(this->children[1].getType() != "int*") {
-					throw string("Expected int*, got " + this->children[1].getType());
-				}
-				ret = "int";
-			}
-		}
-		else if(this->lhs() == "term") {
-			if(this->toString() == "term factor") {
-				ret = this->children[0].getType();
-			}
-			else {
-				for(int i=0; i<this->rhs().size(); ++i) {
-					if(this->rhs()[i] == "factor" || this->rhs()[i] == "term") {
-						if(this->children[i].getType() != "int") {
-							throw string("Expected int, got int*");
-						}
-					}
-				}
-				ret = "int";
-			}
-		}
-		else if(this->lhs() == "expr") {
-			if(this->toString() == "expr term") {
-				ret = this->children[0].getType();
-			}
-			else if(this->toString() == "expr expr PLUS term") {
-				if(this->children[0].getType() == "int" && this->children[2].getType() == "int") {
-					ret = "int";
-				}
-				else if(this->children[0].getType() == "int*" && this->children[2].getType() == "int") {
-					ret = "int*";
-				}
-				else if(this->children[0].getType() == "int" && this->children[2].getType() == "int*") {
-					ret = "int*";
-				}
-				else {
-					throw string("Illegal addition");
-				}
-			}
-			else if(this->toString() == "expr expr MINUS term") {
-				if(this->children[0].getType() == "int" && this->children[2].getType() == "int") {
-					ret = "int";
-				}
-				else if(this->children[0].getType() == "int*" && this->children[2].getType() == "int") {
-					ret = "int*";
-				}
-				else if(this->children[0].getType() == "int*" && this->children[2].getType() == "int*") {
-					ret = "int";
-				}
-				else {
-					throw string("Illegal substraction");
-				}
-			}
-			else if(this->toString() == "expr expr STAR term"
-				|| this->toString() == "expr expr SLASH term"
-				|| this->toString() == "expr expr PCT term") {
-				if(this->children[0].getType() == "int" && this->children[2].getType() == "int") {
-					ret = "int";
-				}
-				else {
-					throw string("Illegal operation");
-				}
-			}
-		}
-		else if(this->lhs() == "main") {
-			int i = 0;
-			while(this->rhs()[++i] != "dcl");
-			while(this->rhs()[++i] != "dcl");
-
-			if(this->children[i].children[0].toString() != "type INT") {
-				throw string("Expected type int for the second argument of wain");
-			}
-
-			i = 0;
-			while(this->rhs()[++i] != "expr");
-
-			if(this->children[i].getType() != "int") {
-				throw string("Main is expected to return an int");
-			}
-		}
-		else if(this->lhs() == "procedure") {
-			int i = 0;
-			while(this->rhs()[++i] != "expr");
-
-			if(this->children[i].getType() != "int") {
-				throw string("Procedures are expected to return an int");
-			}
-		}
-		else if(this->lhs() == "statement") {
-			if(this->toString() == "statement lvalue BECOMES expr SEMI") {
-				if(this->children[0].getType() != this->children[2].getType()) {
-					throw string("Assignment type mismatch");
-				}
-			}
-			else if(this->toString() == "statement PRINTLN LPAREN expr RPAREN SEMI") {
-				if(this->children[2].getType() != "int") {
-					throw string("Expected int for println");
-				}
-			}
-			else if(this->toString() == "statement DELETE LBRACK RBRACK expr SEMI") {
-				if(this->children[3].getType() != "int*") {
-					throw string("Expected int* for delete[]");
-				}
-			}
-		}
-		else if(this->toString() == "dcls dcls dcl BECOMES NULL SEMI") {
-			if(this->children[1].children[0].toString() != "type INT STAR") {
-				throw string("Type mismatch");
-			}
-		}
-		else if(this->toString() == "dcls dcls dcl BECOMES NUM SEMI") {
-			if(this->children[1].children[0].toString() != "type INT") {
-				throw string("Type mismatch");
-			}
-		}
-		else if(this->lhs() == "test") {
-			if(this->children[0].getType() != this->children[2].getType()) {
-				throw string("Comparison between expressions whose type doesn't match");
-			}
-		}
-	}
-	catch(string err) {
-		throw string("[type error in " + current + "] " + err);
-	}
-
-	this->type = ret;
-	return ret;
-}
-
-// Testing fun
-void Tree::printTree(int level) {
-	for(int i=0; i<level; ++i) {
-		cout << " ";
-	}
-	cout << this->toString() << endl;
-	for(int i=0; i<this->children.size(); ++i) {
-		this->children[i].printTree(level+1);
-	}
-}
-
-Tree readTree() {
-	string s;
-	Tree ret;
-
-	getline(cin, s);
-	ret = makeTree(makeNode(s));
-
-	if(!isTerminal(ret.lhs())) {
-		for(int i=0; i<ret.rhs().size(); ++i) {
-			ret.children.push_back(readTree());
-		}
-	}
-
-	return ret;
-}
-
-node makeNode(string &s) {
-	stringstream ss(s);
-	string word;
-	node ret;
-
-	ss >> ret.first;
-	while(ss >> word) {
-		ret.second.push_back(word);
-	}
-	return ret;
-}
-
-Tree makeTree(node n, vector<Tree> t) {
-	Tree ret = { n, t };
-	return ret;
-}
-
-Tree makeTree(node n, Tree t) {
-	vector<Tree> vn;
-	vn.push_back(t);
-	
-	return makeTree(n, vn);
-}
-
-Tree makeTree(node n) {
-	vector<Tree> vn;
-	return makeTree(n, vn);
-}
-
-bool isTerminal(const string &s) {
+bool Valid::isTerminal(const string &s) {
 	return (s == "BOF" 
 		|| s == "BECOMES" 
 		|| s == "COMMA"
@@ -324,137 +59,273 @@ bool isTerminal(const string &s) {
   		|| s == "NULL");
 }
 
-bool isProcedure(const string& p) {
-	return (bool)symbols.count(p);
+void Valid::genParseTree() {
+	string s;
+	getline(cin, s);
+
+	parseTree = Tree(s);
+
+	if(!isTerminal(parseTree.lhs)) {
+		FOREACH(parseTree.rhs) {
+			parseTree.children.push_back(readTree());
+		}
+	}
 }
 
-bool isSymbol(const string& p, const string& id) {
-	return (bool)symbols[p].count(id);
-}
+Tree* Valid::readTree() {
+	string s;
 
-string genSignature(Tree &t) {
-	string ret = "";
+	getline(cin, s);
+	Tree* ret = new Tree(s);
 
-	if(t.toString() == "dcl type ID") {
-		if(t.children[0].toString() == "type INT")
-			ret = " int";
-		else if(t.children[0].toString() == "type INT STAR")
-			ret = " int*";
+	if(!isTerminal(ret->lhs)) {
+		FOREACH(ret->rhs) {
+			ret->children.push_back(readTree());
+		}
 	}
 
-	FOREACH(t.children) {
-		ret += genSignature(t.children[i]);
-	}
 	return ret;
 }
 
-table* genSymbols(Tree &t) {
-	string id, type, sign;
-	int lbound, rbound;
+void Valid::genCode(Tree* t) {
+	if(t->lhs == "procedure" || t->rhs[0] == "main") {
+		Tree *dcls, *statements, *ret;
+		string returnTo;
 
-	if(t.lhs() == "procedures") {
-		if(t.rhs()[0] == "main") {
-			current = "wain";
-	
-			lbound = 0;
-			while(t.children[0].rhs()[++lbound] != "LPAREN");
+		if(t->rhs[0] == "main") {
+			program.push_front(Procedure(string("wain")));
+			current = &program.front();
 
-			rbound = lbound;
-			while(t.children[0].rhs()[++rbound] != "RPAREN");
+			dcls 			= t->children[0]->children[8];
+			statements 		= t->children[0]->children[9];
+			ret 			= t->children[0]->children[11];
+			
+			string& arg1 = t->children[0]->children[3]->children[1]->rhs[0];
+			string& arg2 = t->children[0]->children[5]->children[1]->rhs[0];
 
-			sign = "";
-			for(int i=lbound; i<rbound; ++i) {
-				sign += genSignature(t.children[0].children[i]);
-			}
+			bool arg1Type = (*t->children[0]->children[3]->children[0] == "type INT") ? 1 : 0;
 
-			signature[current] = sign.erase(0,1);
+			current->addSymbol(new Symbol(arg1, arg1Type));
+			current->addSymbol(new Symbol(arg2, 1));
+
+			current->addInstr(new Instr(arg1, '=', string("$1")));
+			current->addInstr(new Instr(arg2, '=', string("$2")), current->instr.back());
+
+			// TODO: MIPS array
+			//
+			//
+
+			returnTo = "$3";
 		}
 		else {
-			current = t.children[0].children[1].rhs()[0];
-			if(isProcedure(current)) {
-				throw string("procedure '" + current + "' declared twice");
-			}
-			signature[current] = genSignature(t.children[0].children[3]).erase(0,1);
+			program.push_front(Procedure(t->children[1]->rhs[0]));
+			current = &program.front();
+
+			dcls 			= t->children[5];
+			statements 		= t->children[6];
+			ret 			= t->children[8];
+
+			// TODO
+
+			returnTo = "$5";
 		}
 
-		symbols.insert(make_pair(current, cell()));
-		order.push_back(current);
-	}
-	else if(t.toString() == "dcl type ID") {
-		id = t.children[1].rhs()[0];
+		dclsCode(dcls);
+		statementsCode(statements);
+		exprCode(returnTo, ret);
 
-		if(isSymbol(current, id))
-			throw string("symbol '" + id + "' declared twice in procedure '" + current + "'");
+	}
+	else {	// procedures procedure procedures
+		genCode(t->children[0]);
+		genCode(t->children[1]);
+	}
+}
 
-		if(t.children[0].toString() == "type INT")
-			type = "int";
-		else if(t.children[0].toString() == "type INT STAR")
-			type = "int*";
+string Valid::getDcl(Tree *t) {
+	return t->children[1]->rhs[0];
+}
 
-		symbols[current][id] = type;
+void Valid::dclsCode(Tree* t) {
+	if(t->rhs.empty()) {
+		return;
 	}
-	else if(t.toString() == "factor ID LPAREN arglist RPAREN" && !isProcedure(t.children[0].rhs()[0])) {
-		throw string("procedure '" + t.children[0].rhs()[0] + "' called but not declared in procedure '" + current + "'");
+
+	if(t->rhs[3] == "NUM") {
+		string var = getDcl(t->children[1]);
+
+		dclsCode(t->children[0]);
+		
+		current->addSymbol(new Symbol(var, 1));
+		current->addInstr(new Instr(var, '=', t->children[3]->rhs[0]));
 	}
-	else if(t.toString() == "factor ID" && !isSymbol(current, t.children[0].rhs()[0])) {
-		throw string("variable '" + t.children[0].rhs()[0] + "' used but not declared in procedure '" + current + "'");
+	else if(t->rhs[3] == "NULL") {
+		// @TODO
+		//
+		//
+		//
+
 	}
-	else if(t.toString() == "factor ID LPAREN arglist RPAREN" && isSymbol(current, t.children[0].rhs()[0])) {
-		throw string("ambiguous use of '" + t.children[0].rhs()[0] + "' in procedure '" + current + "'");
+}
+
+string Valid::getLvalue(Tree* t) {
+	if(*t == "lvalue ID") {
+		string s = t->children[0]->rhs[0];
+		return s;
 	}
+	else if(*t == "lvalue STAR factor") {
+		// @TODO
+		//
+		//
+		//
+		//
+	}
+	else {	// lvalue LPAREN lvalue RPAREN
+		return getLvalue(t->children[1]);
+	}
+}
+
+void Valid::statementsCode(Tree *t) {
+	if(t->lhs == "statements" && !t->rhs.empty()) { // *t == "statements statements statement"
+		statementsCode(t->children[0]);
+		statementsCode(t->children[1]);
+	}
+	else if(t->lhs == "statement") {
+		if(t->rhs[0] == "PRINTLN") { // PRINTLN LPAREN expr RPAREN SEMI
+			exprCode(string("$1"), t->children[2]);
+			current->addInstr(new Instr(string("$1"), 'P'), current->instr.back());
+		}
+		else if(t->rhs[0] == "lvalue") { // lvalue BECOMES expr SEMI
+			string var = getLvalue(t->children[0]);
+
+			exprCode("$8", t->children[2]);
+			current->addInstr(new Instr(var, '=', string("$8")), current->instr.back());
+		}
+		else if(t->rhs[0] == "WHILE") { // WHILE LPAREN test RPAREN LBRACE statements RBRACE 
+			loopCode(t);
+		}
+		else if(t->rhs[0] == "IF") { // IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE 
+			ifCode(t);
+		}
+	}
+}
+
+void Valid::testCode(Tree* t, string& temp1, string& temp2) {
+	exprCode(temp1, t->children[0]);
+	exprCode(temp2, t->children[2]);
+}
+
+void Valid::ifCode(Tree* t) { // IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE 
+	string temp1 = makeTemp();
+	string temp2 = makeTemp();
+	Instr *origin, *ifBlock, *elseBlock;
+
+	Args test = Args(temp1, operation(t->children[2]->children[1]->rhs[0]), temp2);
+
+	testCode(t->children[2], temp1, temp2);
+	string id = makeIf();
+	origin = current->instr.back();
+
+	current->addInstr(new Instr(id, 'I', test), origin);
+
+	statementsCode(t->children[5]);
+	ifBlock = current->instr.back();
+
+	current->addInstr(new Instr(id, 'e'), origin);
+
+	statementsCode(t->children[9]);
+	elseBlock = current->instr.back();	
+
+	current->addInstr(new Instr(id, 'i'), ifBlock, elseBlock);
+}
+
+void Valid::loopCode(Tree* t) { // WHILE LPAREN test RPAREN LBRACE statements RBRACE 
+	string temp1 = makeTemp();
+	string temp2 = makeTemp();
+	Instr *origin, *testBlock, *loopBlock;
+
+	Args test = Args(temp1, operation(t->children[2]->children[1]->rhs[0]), temp2);
+
+	string id = makeLoop();
+	origin = current->instr.back();
+
+	current->addInstr(new Instr(id, 'W'), origin);
 	
-	FOREACH(t.children) {
-		genSymbols(t.children[i]);
+	testCode(t->children[2], temp1, temp2);
+	testBlock = current->instr.back();
+
+	current->addInstr(new Instr(id, 'T', test), testBlock);
+
+	statementsCode(t->children[5]);
+	loopBlock = current->instr.back();
+
+	current->addInstr(new Instr(id, 'W'), testBlock);
+	testBlock->in.push_back(loopBlock);
+}
+
+void Valid::exprCode(const string& var, Tree *t) {
+	if(*t == "expr term" || *t == "term factor") {
+		exprCode(var, t->children[0]);
 	}
-
-	return &symbols;
-}
-
-void testTypes(Tree &t) {
-	if(t.lhs() == "procedures") {
-		if(t.rhs()[0] == "main") {
-			current = "wain";
-		}
-		else {
-			current = t.children[0].children[1].rhs()[0];
-		}
+	else if(*t == "factor LPAREN expr RPAREN") {
+		exprCode(var, t->children[1]);
 	}
-
-	t.getType();
-
-	FOREACH(t.children) {
-		testTypes(t.children[i]);
+	else if(*t == "factor ID" || *t == "factor NUM") {
+		current->addInstr(new Instr(var, '=', t->children[0]->rhs[0]), current->instr.back()); 
 	}
-}
+	else if ((t->lhs == "expr" || t->lhs == "term") && t->rhs.size() == 3) {
+		char operation;
 
-void printSymbols() {
-	FOREACH(order) {
-		cerr << order[i] << " " << signature[order[i]] << endl;
+		if(*t == "expr expr PLUS term")
+			operation = '+';
+		else if(*t == "expr expr MINUS term")
+			operation = '-';
+		else if(*t == "term term STAR factor")
+			operation = '*';
+		else if(*t == "term term SLASH factor")
+			operation = '/';
+		else if(*t == "term term PCT factor")
+			operation = '%';
 
-		for(cell::const_iterator it2 = symbols[order[i]].begin(); it2 != symbols[order[i]].end(); ++it2) {
-			cerr << it2->first << " " << it2->second << endl;
-		}
+		string temp = makeTemp();
 
-		if(order[i] != "wain")
-			cerr << endl;
+		exprCode(temp, t->children[0]);
+		exprCode(var, t->children[2]);
+
+		current->addInstr(new Instr(var, '=', Args(temp, operation, var)), current->instr.back());
 	}
+	else
+		throw string("You shouldn't be here");
 }
 
-vector<string>* getOrder() {
-	return &order;
+void Valid::genCode() {
+	genCode(parseTree.children[1]); // procedures procedure procedures
 }
 
-cell* getSignature() {
-	return &signature;
+string Valid::makeIf() {
+	ifCount++;
+	stringstream ic;
+	ic << ifCount;
+
+	return string("_I" + ic.str());
 }
 
-bool isNum(const string& s) {
-	if(s[0] == '-') return true;
-    string::const_iterator it = s.begin();
-    while (it != s.end() && std::isdigit(*it)) ++it;
-    return !s.empty() && it == s.end();
+string Valid::makeLoop() {
+	loopCount++;
+	stringstream ic;
+	ic << loopCount;
+
+	return string("_W" + ic.str());
 }
 
-bool isReg(const string& s) {
-	return (s[0] == '$');
+string Valid::makeTemp() {
+	++tempCount;
+
+	stringstream tc;
+	tc << tempCount;
+
+	string t = string("t" + tc.str());
+
+	current->addSymbol(new Symbol(t));
+
+	return t;
 }

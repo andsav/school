@@ -1,63 +1,36 @@
-#include "valid.h"
 #include "Mips.h"
 
 int main() {
-
-	Tree parseTree = readTree();
-	table* symbols;
-	vector<string>* order;
-	cell* signature;
-
 	try{
-		/*
-		*
-		*	SEMANTIC TESTING (A8)
-		*
-		*/
-		symbols = genSymbols(parseTree);
-		order = getOrder();
-		signature = getSignature();
-		//testTypes(parseTree);
+
+		Valid::genParseTree();
+
+		//cout << parseTree;
+
+		Valid::genCode();
+
+		FOREACH(current->symbols) {
+			current->symbols[i]->use.second = current->instr.size()-1;
+		}
+
+		Loc::genLoc();
 
 		/*
-		*
-		*	COMPILING (A9 - A11)
-		*		
+		FOREACH(current->symbols) {
+			cout << current->symbols[i]->name << " "
+				 << current->symbols[i]->def.first << " - " << current->symbols[i]->use.second
+				 << " ::" << current->symbols[i]->loc << endl;
+		}
 		*/
 
-		// 1) Generate intermediate code
-		Mini mini(parseTree, *symbols, *order);
-		//cout << mini;
-		//cout << endl << endl;
+		Mips::genCode();
 
-		// 2) Build control flow graph
-		Split split(*mini.getCode(), *mini.getFullSymbols());
+		cout << code.rdbuf();
 
-		// 3) Liveness analysis, constant propagation, optimize
-		Live live(*split.getFunctions(), *mini.getFullSymbols());
-		//cout << live;
-		//cout << endl << endl;
-
-		// 4) Register allocation
-		Loc loc(*live.getProcedures(), *live.getLive());
-
-		// 5) Generate MIPS code
-
-
-		//
-		//
-		//procedures = optimize(split(m.getCode()));
-		//procedures p = m.getCode();
-		//Loc loc(p);
-		//locTable l = loc.getLocation();
-
-		Mips mips(*mini.getCode(), *loc.getLocation(), loc.getOffset());
-		cout << mips;
 	}
-	catch(string err) {
-		cerr << "ERROR (" << err << ")" << endl;
+	catch(string s) {
+		cerr << "ERROR: " << s << endl;
 	}
-	
 }
 
-// 632696
+#include "Mips.h"

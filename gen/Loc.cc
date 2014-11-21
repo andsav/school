@@ -1,104 +1,68 @@
-#include "Loc.h"												
+#include "Loc.h"
 
-sortByEndPoint::sortByEndPoint(Loc* l) : l(l) {}
+stack<int> freeRegs;
+vector<string> active;
 
-bool sortByEndPoint::operator() (const string& a, const string& b) {
-	return (l->alive[l->current][a].second < l->alive[l->current][b].second);
-}
+void Loc::genLoc() {
+	offset = 0;
 
-sortByStartPoint::sortByStartPoint(Loc* l) : l(l) {}
-
-bool sortByStartPoint::operator() (const string& a, const string& b) {
-	return (l->alive[l->current][a].first < l->alive[l->current][b].first);
-}
-
-/*
-*	REGISTER ALLOCATION
-*/
-
-Loc::Loc(map<string, vector<Graph*> >& p, liveTable& alive) : p(p), alive(alive), offset(0) {
 	for(int i=28; i>14; --i) {
-		this->freeRegs.push(i);
+		freeRegs.push(i);
 	}
 
-	this->genLocations();
+	FOREACH(program) {
+		active.clear();
+		current = &program[i];
+		sortSymbol sortByLast(current, LAST_USE);
+		sortSymbol sortByFirst(current, FIRST_DEF);
 
-	/*
-	for(map<string, int>::iterator it = this->location["wain"].begin(); it != this->location["wain"].end(); ++it) {
-		if(isReg(it->first)) continue;
-		cout << it->first << ": " << it->second << endl;
-	}
-	*/
-}
+		sort(current->symbolsList.begin(), current->symbolsList.end(), sortByFirst);
 
-void Loc::expire(string var) {
-	for(int i=0; i<this->active.size(); ++i) {
-		if(this->alive[this->current][this->active[i]].second >= this->alive[this->current][var].first) {
-			break;
+		FOREACH_(current->symbolsList, j) {
+			string& var = current->symbolsList[j];
+
+			expire(var);
+
+			if(freeRegs.empty()) {
+				spill(var, sortByLast);
+			}
+			else {
+				current->symbolsTable[var]->loc = freeRegs.top();
+				freeRegs.pop();
+				active.push_back(var);
+				sort(active.begin(), active.end(), sortByLast);
+			}
 		}
-
-		this->freeRegs.push(this->location[this->current][this->active[i]]);
-		this->active.erase(
-			remove(this->active.begin(), this->active.end(), this->active[i]),
-			this->active.end());
 	}
 }
 
-void Loc::spill(string var) {
-	string spill = active[active.size()-1];
-	sortByEndPoint end(this);
+void Loc::spill(string& var, sortSymbol& sortFunction) {
+	string spill = active.back();
 
-	if(this->alive[this->current][spill].second > this->alive[this->current][var].second) {
-		this->location[this->current][var] = this->location[this->current][spill];
-		offset++;
-		this->location[this->current][spill] = -4*offset;
+	// Spill the last element of active
+	if(current->symbolsTable[spill]->use.second > current->symbolsTable[var]->use.second) {
+		current->symbolsTable[var]->loc = current->symbolsTable[spill]->loc;
+		++offset;
+		current->symbolsTable[spill]->loc = -4*offset;
 		active.pop_back();
 		active.push_back(var);
-		sort(active.begin(), active.end(), end);
+		sort(active.begin(), active.end(), sortFunction);
 	}
+	// Spill the passed argument
 	else {
-		offset++;
-		this->location[this->current][var] = -4*offset;
+		++offset;
+		current->symbolsTable[var]->loc = -4*offset;
 	}
 }
 
-void Loc::genLocations(string current) {
-	sortByEndPoint end(this);
-	sortByStartPoint start(this);
+void Loc::expire(string& var) {
+	FOREACH(active) {
+		if(current->symbolsTable[active[i]]->use.second >= current->symbolsTable[var]->def.first)
+			break;
 
-	for(map<string, pair<int, int> >::iterator it = this->alive[current].begin();
-		it != this->alive[current].end(); ++it) {
-		this->order[current].push_back(it->first);
+		freeRegs.push(current->symbolsTable[active[i]]->loc);
+		active.erase(
+			remove(active.begin(), active.end(), active[i]),
+			active.end());
 	}
-
-	sort(this->order[current].begin(), this->order[current].end(), start);
-	this->current = current;
-	
-	for(int i=0; i<this->order[current].size(); ++i) {
-		string& var = this->order[current][i];
-
-		this->expire(var);
-
-		if(this->freeRegs.empty()) {
-			this->spill(var);
-		}
-		else {
-			this->location[current][var] = this->freeRegs.top();
-			this->freeRegs.pop();
-			active.push_back(var);
-			sort(active.begin(), active.end(), end);
-		}
-	}
-}
-
-void Loc::genLocations() {
-	FOREACH_PROCEDURE2(this->genLocations);
-}
-
-locTable* Loc::getLocation() {
-	return &this->location; 
-}
-
-int Loc::getOffset() {
-	return this->offset;
 }

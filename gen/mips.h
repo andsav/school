@@ -3,37 +3,19 @@
 
 #include "Loc.h"
 
-class Mips {
-
-friend ostream& operator<<(ostream&, Mips&);
-
-private:
-	int 	offset;
-	string 	current;
-
-	procedures& 	p;
-	locTable&		l;
-	stringstream	out;
-
-	void prologue();
-	void epilogue();
-
-	void genCode(string);
+namespace Mips {
 	void genCode();
 
-	void genComment(Instr&);
+	void prologue();
+	void body();
+	void epilogue();
 
-	void operation(Instr& instr);
-	void is(string a, string b);
+	void operation(Instr*);
+	void is(string, string);
+	void genTest(Args&, string, string);
 
 	bool isStored(string&);
 	int getLocation(string&);
-
-	void genTest(vector<string>&, string, string);
-
-public:
-	Mips(procedures&, locTable&, int);
-
-};
+}
 
 #endif
