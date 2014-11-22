@@ -141,7 +141,7 @@ Procedure::~Procedure() {
 void Procedure::addInstr(Instr* instr) {
 	instr->proc = this;
 	this->instr.push_back(instr);
-
+	
 	if(isVar(instr->var)) {
 		this->symbolsTable[instr->var]->def.second = this->instr.size();
 	}

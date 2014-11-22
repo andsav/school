@@ -144,42 +144,19 @@ void Valid::genCode(Tree* t) {
 	}
 }
 
-string Valid::getDcl(Tree *t) {
-	return t->children[1]->rhs[0];
-}
-
 void Valid::dclsCode(Tree* t) {
 	if(t->rhs.empty()) {
 		return;
 	}
 
 	if(t->rhs[3] == "NUM" || t->rhs[3] == "NULL") {
-		string var = getDcl(t->children[1]);
+		string var = t->children[1]->children[1]->rhs[0];
 
 		dclsCode(t->children[0]);
 		bool isNum = ((t->rhs[3] == "NUM") ? 1 : 0);
 
 		current->addSymbol(new Symbol(var, isNum));
 		current->addInstr(new Instr(var, '=', t->children[3]->rhs[0]), current->instr.back());
-	}
-}
-
-string Valid::getLvalue(Tree* t) {
-	if(*t == "lvalue ID") {
-		string s = t->children[0]->rhs[0];
-		return s;
-	}
-	else if(*t == "lvalue STAR factor") {
-		string temp = makeTemp();
-		string s = makePTemp();
-
-		exprCode(s, t->children[1]);
-		current->addInstr(new Instr(temp, '=', Args(s, '@')), current->instr.back()); 
-		
-		return temp;
-	}
-	else {	// lvalue LPAREN lvalue RPAREN
-		return getLvalue(t->children[1]);
 	}
 }
 
@@ -194,23 +171,14 @@ void Valid::statementsCode(Tree *t) {
 			current->addInstr(new Instr(string("$1"), 'P'), current->instr.back());
 		}
 		else if(t->rhs[0] == "lvalue") { // lvalue BECOMES expr SEMI
-			// assignment to pointer
-			if(*t->children[0] == "lvalue STAR factor") {
-				string var = t->children[0]->children[1]->children[0]->rhs[0];
-
-				string temp = makePTemp();
-
-				exprCode("$8", t->children[2]);
-
-				current->addInstr(new Instr(temp, '=', string("$8")), current->instr.back()); 
-
-				current->addInstr(new Instr(var, '=', Args(temp, '&')), current->instr.back());
+			Args lv = getLvalue(t->children[0]);
+			if(lv.cmd == '@') {
+				string temp = makeTemp();
+				exprCode(temp, t->children[2]);
+				current->addInstr(new Instr(lv.var1, '@', temp), current->instr.back());
 			}
 			else {
-				string var = getLvalue(t->children[0]);
-
-				exprCode("$8", t->children[2]);
-				current->addInstr(new Instr(var, '=', string("$8")), current->instr.back());
+				exprCode(lv.var1, t->children[2]);
 			}
 		}
 		else if(t->rhs[0] == "WHILE") { // WHILE LPAREN test RPAREN LBRACE statements RBRACE 
@@ -275,6 +243,110 @@ void Valid::loopCode(Tree* t) { // WHILE LPAREN test RPAREN LBRACE statements RB
 	testBlock->in.push_back(loopBlock);
 }
 
+void Valid::lvalueCode(const string& var, Tree *t) {
+	if(t->rhs[0] == "ID") {
+		current->addInstr(new Instr(var, '=', t->children[0]->rhs[0]), current->instr.back()); 
+	}
+	else if(t->rhs[0] == "STAR") { // lvalue STAR factor
+		starFactorCode(var, t->children[1]);
+	}
+	else { // LPAREN lvalue RPAREN
+		lvalueCode(var, t->children[1]);
+	}
+}
+
+void Valid::ampLvalueCode(const string& var, Tree *t) {
+	if(t->rhs[0] == "ID") {
+		current->addInstr(new Instr(var, '=', Args(t->children[0]->rhs[0], '&')), current->instr.back()); 
+	}
+	else if(t->rhs[0] == "STAR") { // lvalue STAR factor
+		exprCode(var, t->children[1]);
+	}
+	else { // LPAREN lvalue RPAREN
+		ampLvalueCode(var, t->children[1]);
+	}
+}
+
+void Valid::starFactorCode(const string& var, Tree *t) {
+	if(t->rhs[0] == "LPAREN") {  // factor LPAREN expr RPAREN
+		string temp = makeTemp();
+		exprCode(temp, t->children[1]);
+		current->addInstr(new Instr(var, '=', Args(temp, '@')), current->instr.back()); 
+	}
+	else if(t->rhs[0] == "ID") {
+		current->addInstr(new Instr(var, '=', Args(t->children[0]->rhs[0], '@')), current->instr.back()); 
+	}
+	else if(t->rhs[0] == "AMP") { // factor AMP lvalue
+		lvalueCode(var, t->children[1]);
+	}
+	else {
+		throw string("Yo dawg, I heard you like pointers");
+	}
+}
+
+
+Args Valid::getLvalue(Tree *t) {
+	if(t->rhs[0] == "ID") {
+		return Args(t->children[0]->rhs[0]); 
+	}
+	else if(t->rhs[0] == "STAR") { // lvalue STAR factor
+		return getStarFactor(t->children[1]);
+	}
+	else { // LPAREN lvalue RPAREN
+		return getLvalue(t->children[1]);
+	}
+}
+
+Args Valid::getAmpLvalue(Tree *t) {
+	if(t->rhs[0] == "ID") {
+		return Args(t->children[0]->rhs[0], '&'); 
+	}
+	else if(t->rhs[0] == "STAR") { // lvalue STAR factor
+		return getFactor(t->children[1]);
+	}
+	else { // LPAREN lvalue RPAREN
+		return getAmpLvalue(t->children[1]);
+	}
+}
+
+Args Valid::getFactor(Tree *t) {
+	if(t->rhs[0] == "LPAREN") {  // factor LPAREN expr RPAREN
+		string temp = makeTemp();
+		exprCode(temp, t->children[1]);
+		return Args(temp);
+	}
+	else if(t->rhs[0] == "NULL") { // factor NULL
+		string temp = "NULL";
+		return Args(temp);
+	}
+	else if(t->rhs[0] == "ID" || t->rhs[0] == "NUM") {
+		return Args(t->children[0]->rhs[0]);
+	}
+	else if(t->rhs[0] == "AMP") { // factor AMP lvalue
+		return getAmpLvalue(t->children[1]);
+	}
+	else if(t->rhs[0] == "STAR") { // factor STAR factor
+		return getStarFactor(t->children[1]);
+	}
+}
+
+Args Valid::getStarFactor(Tree *t) {
+	if(t->rhs[0] == "LPAREN") {  // factor LPAREN expr RPAREN
+		string temp = makeTemp();
+		exprCode(temp, t->children[1]);
+		return Args(temp, '@'); 
+	}
+	else if(t->rhs[0] == "ID") {
+		return Args(t->children[0]->rhs[0], '@'); 
+	}
+	else if(t->rhs[0] == "AMP") { // factor AMP lvalue
+		return getLvalue(t->children[1]);
+	}
+	else {
+		throw string("Yo dawg, I heard you like pointers");
+	}
+}
+
 void Valid::exprCode(const string& var, Tree *t) {
 	if(*t == "expr term" || *t == "term factor") {
 		exprCode(var, t->children[0]);
@@ -290,15 +362,10 @@ void Valid::exprCode(const string& var, Tree *t) {
 			current->addInstr(new Instr(var, '=', t->children[0]->rhs[0]), current->instr.back()); 
 		}
 		else if(t->rhs[0] == "AMP") { // factor AMP lvalue
-			string id = getLvalue(t->children[1]);
-
-			current->addInstr(new Instr(var, '=', Args(id, '&')), current->instr.back()); 
+			ampLvalueCode(var, t->children[1]);
 		}
 		else if(t->rhs[0] == "STAR") { // factor STAR factor
-			string temp = makePTemp();
-
-			exprCode(temp, t->children[1]);
-			current->addInstr(new Instr(var, '=', Args(temp, '@')), current->instr.back()); 
+			starFactorCode(var, t->children[1]);
 		}
 	}
 	else if ((t->lhs == "expr" || t->lhs == "term") && t->rhs.size() == 3) {
@@ -365,7 +432,7 @@ string Valid::makePTemp() {
 	stringstream tc;
 	tc << tempCount;
 
-	string t = string("p" + tc.str());
+	string t = string("t" + tc.str());
 
 	current->addSymbol(new Symbol(t, 0));
 

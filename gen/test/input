@@ -11,5 +11,5 @@ int wain (int *a, int b) {
   *g = *h;
   h = f;
   *h = 100;
-  return *f * d * b;
+  return *&*&*&*&*&*&*&*f;
 }

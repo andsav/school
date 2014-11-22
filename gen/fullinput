@@ -17,64 +17,45 @@ INT int
 ID b
 RPAREN )
 LBRACE {
-dcls dcls dcl BECOMES NUM SEMI
+dcls dcls dcl BECOMES NULL SEMI
 dcls dcls dcl BECOMES NULL SEMI
 dcls
 dcl type ID
 type INT STAR
 INT int
 STAR *
-ID x
+ID g
 BECOMES =
 NULL NULL
 SEMI ;
 dcl type ID
-type INT
+type INT STAR
 INT int
-ID y
+STAR *
+ID h
 BECOMES =
-NUM 7
+NULL NULL
 SEMI ;
 statements statements statement
 statements
 statement lvalue BECOMES expr SEMI
-lvalue ID
-ID x
+lvalue STAR factor
+STAR *
+factor ID
+ID g
 BECOMES =
-expr term
-term factor
-factor AMP lvalue
-AMP &
-lvalue ID
-ID y
-SEMI ;
-RETURN return
 expr term
 term factor
 factor STAR factor
 STAR *
-factor LPAREN expr RPAREN
-LPAREN (
-expr expr MINUS term
-expr expr PLUS term
-expr expr PLUS term
+factor ID
+ID h
+SEMI ;
+RETURN return
 expr term
 term factor
-factor ID
-ID x
-PLUS +
-term factor
 factor NUM
-NUM 5
-PLUS +
-term factor
-factor NUM
-NUM 7
-MINUS -
-term factor
-factor NUM
-NUM 12
-RPAREN )
+NUM 0
 SEMI ;
 RBRACE }
 EOF EOF

@@ -16,12 +16,20 @@ namespace Valid {
 	void genCode(Tree*);
 	void genCode();
 
-	string getLvalue(Tree*);
-	string getDcl(Tree*);
-
 	void testCode(Tree*, string&, string&);
 	void dclsCode(Tree*);
 	void statementsCode(Tree*);
+
+	void lvalueCode(const string&, Tree*);
+	void ampLvalueCode(const string&, Tree*);
+	void starFactorCode(const string&, Tree*);
+
+	Args getLvalue(Tree*);
+	Args getAmpLvalue(Tree*);
+	Args getStarFactor(Tree*);
+	Args getFactor(Tree*);
+
+
 	void exprCode(const string&, Tree*);
 
 	void ifCode(Tree*);

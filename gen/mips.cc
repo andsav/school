@@ -47,6 +47,9 @@ void Mips::body() {
 						operation(instr);
 					}
 				break;
+				case '@' :
+					store(instr->var, instr->args.var1);
+				break;
 				case 'P' :
 					if(instr->var != "$1") {	// Print takes in $1
 						is(string("$1"), instr->var);
@@ -97,6 +100,13 @@ void Mips::epilogue() {
 		 << ".word " << (4*offset) << endl
 	     << "add $30, $30, $4" << endl
 		 << "lw $31, -" << whereIs31 << "($30)" << endl << "jr $31" << endl;
+}
+
+void Mips::store(string& a, string& b) {
+	is(string("$5"), a);
+	is(string("$6"), b);
+
+	code << "sw $6, 0($5)" << endl;
 }
 
 void Mips::pointersFun(Instr* instr) {
