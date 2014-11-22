@@ -153,21 +153,14 @@ void Valid::dclsCode(Tree* t) {
 		return;
 	}
 
-	if(t->rhs[3] == "NUM") {
+	if(t->rhs[3] == "NUM" || t->rhs[3] == "NULL") {
 		string var = getDcl(t->children[1]);
 
 		dclsCode(t->children[0]);
-		
-		current->addSymbol(new Symbol(var, 1));
+		bool isNum = ((t->rhs[3] == "NUM") ? 1 : 0);
+
+		current->addSymbol(new Symbol(var, isNum));
 		current->addInstr(new Instr(var, '=', t->children[3]->rhs[0]));
-	}
-	else if(t->rhs[3] == "NULL") {
-		string var = getDcl(t->children[1]);
-
-		dclsCode(t->children[0]);
-		current->addSymbol(new Symbol(var, 0));
-
-		// NO INSTRUCTION PRODUCED
 	}
 }
 

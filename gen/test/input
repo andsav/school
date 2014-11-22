@@ -1,6 +1,1 @@
-int wain(int a, int b) {
-   int *x = NULL;
-   int y = 7;
-   x = &y;
-   return *(&(*(&(*x))));
-}
+int wain (int *a, int b) { return *a; }

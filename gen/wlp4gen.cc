@@ -13,7 +13,7 @@ int main() {
 
 		//cout << *current;
 		//throw(string("die"));
-
+		
 		FOREACH(current->symbols) {
 			current->symbols[i]->use.second = current->instr.size()-1;
 		}

@@ -6,8 +6,9 @@ INT int
 WAIN wain
 LPAREN (
 dcl type ID
-type INT
+type INT STAR
 INT int
+STAR *
 ID a
 COMMA ,
 dcl type ID
@@ -54,6 +55,8 @@ factor STAR factor
 STAR *
 factor LPAREN expr RPAREN
 LPAREN (
+expr expr MINUS term
+expr expr PLUS term
 expr expr PLUS term
 expr term
 term factor
@@ -63,6 +66,14 @@ PLUS +
 term factor
 factor NUM
 NUM 5
+PLUS +
+term factor
+factor NUM
+NUM 7
+MINUS -
+term factor
+factor NUM
+NUM 12
 RPAREN )
 SEMI ;
 RBRACE }

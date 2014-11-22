@@ -15,6 +15,7 @@ namespace Mips {
 	void genTest(Args&, string, string);
 	void pointersFun(Instr*);
 
+	bool isPointer(string&);
 	bool isStored(string&);
 	int getLocation(string&);
 }

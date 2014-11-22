@@ -98,7 +98,37 @@ void Mips::epilogue() {
 }
 
 void Mips::pointersFun(Instr* instr) {
-	throw string("hello");
+	stringstream ss;
+	int loc;
+
+	switch(instr->args.cmd) {
+		case '&' :
+			
+			loc = getLocation(instr->args.var1);
+
+			if(loc > 0) {
+				++offset;
+				loc = -offset*4;
+
+				code << "sub $30, $30, $4" << endl
+					 << "sw $" << getLocation(instr->args.var1) << ", " << loc << "($29)" << endl;
+			}
+
+			ss << loc;
+			is(string("$5"), ss.str());
+
+			code << "sub $5, $29, $5" << endl;
+			is(instr->var, string("$5"));
+		
+		break;
+		case '@' :
+			
+			is(string("$5"), instr->args.var1);
+			code << "lw $5, 0($5)" << endl;
+			is(instr->var, string("$5"));
+
+		break;
+	}
 }
 
 void Mips::operation(Instr* instr) {
@@ -144,6 +174,9 @@ void Mips::operation(Instr* instr) {
 	}
 }
 void Mips::is(string a, string b) {
+	if(b == "NULL")
+		b = "0";
+
 	if(isReg(a)) {
 		if(isReg(b)) {
 			code << "add " << a << ", $0, " << b << endl;
@@ -179,7 +212,6 @@ void Mips::is(string a, string b) {
 			else {
 				code << "lis $" << getLocation(a) << endl
 				     << ".word " << b << endl;
-
 			}
 		}
 		else {
@@ -244,6 +276,19 @@ void Mips::genTest(Args& test, string id, string go) {
 				 << "bne $7, $0, " << go << endl;
 		break;
 	}
+}
+
+bool Mips::isPointer(string& s) {
+	if(s[0] == 'p')
+		return 1;
+
+	if(!isVar(s))
+		return 0;
+	
+	if(!current->symbolsTable[s]->isInt)
+		return 1;
+
+	return 0;
 }
 
 bool Mips::isStored(string& s) {

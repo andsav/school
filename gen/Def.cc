@@ -303,7 +303,7 @@ bool isNum(const string& s) {
 	if(s.empty())
 		return false;
 
-	if(s[0] == '0') 
+	if(s[0] == '-') 
 		return true;
 
     string::const_iterator it = s.begin();
@@ -319,6 +319,8 @@ bool isReg(const string& s) {
 
 bool isVar(const string& s) {
 	if(s.empty())
+		return false;
+	if(s == "NULL")
 		return false;
 	return (s[0] != '0' && !isReg(s) && !isNum(s));
 }
