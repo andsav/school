@@ -1,1 +1,15 @@
-int wain (int *a, int b) { return *a; }
+int wain (int *a, int b) {
+  int c = 5;
+  int d = 7;
+  int e = 8;
+  int *f = NULL;
+  int *g = NULL;
+  int *h = NULL;
+  f = &c;
+  g = &d;
+  h = &e;
+  *g = *h;
+  h = f;
+  *h = 100;
+  return *f * d * b;
+}

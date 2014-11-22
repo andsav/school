@@ -1,6 +1,7 @@
 #include "Mips.h"
 
 stringstream code;
+int whereIs31;
 
 void Mips::genCode() {
 	prologue();
@@ -10,10 +11,11 @@ void Mips::genCode() {
 
 void Mips::prologue() {
 	offset += 2;
+	whereIs31 = 4*offset-4;
 	code << ".import print" << endl
-		 << "sw $31, -" << (4*offset-4) << "($30)"<< endl
-		 << "add $29, $30, $0" << endl
 		 << "lis $10" << endl << ".word print" << endl
+		 << "sw $31, -" << whereIs31 << "($30)"<< endl
+		 << "add $29, $30, $0" << endl
 		 << "lis $11" << endl << ".word 1" << endl
 		 << "lis $4" << endl 
 		 << ".word " << (4*offset) << endl
@@ -94,7 +96,7 @@ void Mips::epilogue() {
 		 << "lis $4" << endl 
 		 << ".word " << (4*offset) << endl
 	     << "add $30, $30, $4" << endl
-		 << "lw $31, -" << (4*offset-4) << "($30)" << endl << "jr $31" << endl;
+		 << "lw $31, -" << whereIs31 << "($30)" << endl << "jr $31" << endl;
 }
 
 void Mips::pointersFun(Instr* instr) {
@@ -117,7 +119,7 @@ void Mips::pointersFun(Instr* instr) {
 			ss << loc;
 			is(string("$5"), ss.str());
 
-			code << "sub $5, $29, $5" << endl;
+			code << "add $5, $29, $5" << endl;
 			is(instr->var, string("$5"));
 		
 		break;
@@ -175,15 +177,23 @@ void Mips::operation(Instr* instr) {
 }
 void Mips::is(string a, string b) {
 	if(b == "NULL")
-		b = "0";
+		b = "1";
 
 	if(isReg(a)) {
 		if(isReg(b)) {
 			code << "add " << a << ", $0, " << b << endl;
 		}
 		else if(isNum(b)) {
-			code << "lis " << a << endl
-				 << ".word " << b << endl;
+			if(b == "1")
+				code << "add " << a << ", $11, $0" << endl;
+			else if(b == "0")
+				code << "add " << a << ", $0, $0" << endl;
+			else if(b == "4")
+				code << "add " << a << ", $4, $0" << endl;
+			else {
+				code << "lis " << a << endl
+					 << ".word " << b << endl;
+			}
 		}
 		else {
 			if(isStored(b)) {
@@ -205,13 +215,29 @@ void Mips::is(string a, string b) {
 		}
 		else if(isNum(b)) {
 			if(isStored(a)) {
-				code << "lis $5" << endl
-					 << ".word " << b << endl
-					 << "sw $5, " << getLocation(a) << "($29)" << endl;
+				if(b == "1")
+					code << "sw $11, " << getLocation(a) << "($29)" << endl;
+				else if(b == "0")
+					code << "sw $0, " << getLocation(a) << "($29)" << endl;
+				else if(b == "4")
+					code << "sw $4, " << getLocation(a) << "($29)" << endl;
+				else {
+					code << "lis $5" << endl
+						 << ".word " << b << endl
+						 << "sw $5, " << getLocation(a) << "($29)" << endl;
+				}
 			}
 			else {
-				code << "lis $" << getLocation(a) << endl
-				     << ".word " << b << endl;
+				if(b == "1")
+					code << "add $" << getLocation(a) << ", $11, $0" << endl;
+				else if(b == "0")
+					code << "add $" << getLocation(a) << ", $0, $0" << endl;
+				else if(b == "4")
+					code << "add $" << getLocation(a) << ", $4, $0" << endl;
+				else {
+					code << "lis $" << getLocation(a) << endl
+					     << ".word " << b << endl;
+			 	}
 			}
 		}
 		else {

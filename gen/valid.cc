@@ -160,7 +160,7 @@ void Valid::dclsCode(Tree* t) {
 		bool isNum = ((t->rhs[3] == "NUM") ? 1 : 0);
 
 		current->addSymbol(new Symbol(var, isNum));
-		current->addInstr(new Instr(var, '=', t->children[3]->rhs[0]));
+		current->addInstr(new Instr(var, '=', t->children[3]->rhs[0]), current->instr.back());
 	}
 }
 
@@ -174,7 +174,7 @@ string Valid::getLvalue(Tree* t) {
 		string s = makePTemp();
 
 		exprCode(s, t->children[1]);
-		current->addInstr(new Instr(temp, '=', Args(s, '@'))); 
+		current->addInstr(new Instr(temp, '=', Args(s, '@')), current->instr.back()); 
 		
 		return temp;
 	}
@@ -194,10 +194,24 @@ void Valid::statementsCode(Tree *t) {
 			current->addInstr(new Instr(string("$1"), 'P'), current->instr.back());
 		}
 		else if(t->rhs[0] == "lvalue") { // lvalue BECOMES expr SEMI
-			string var = getLvalue(t->children[0]);
+			// assignment to pointer
+			if(*t->children[0] == "lvalue STAR factor") {
+				string var = t->children[0]->children[1]->children[0]->rhs[0];
 
-			exprCode("$8", t->children[2]);
-			current->addInstr(new Instr(var, '=', string("$8")), current->instr.back());
+				string temp = makePTemp();
+
+				exprCode("$8", t->children[2]);
+
+				current->addInstr(new Instr(temp, '=', string("$8")), current->instr.back()); 
+
+				current->addInstr(new Instr(var, '=', Args(temp, '&')), current->instr.back());
+			}
+			else {
+				string var = getLvalue(t->children[0]);
+
+				exprCode("$8", t->children[2]);
+				current->addInstr(new Instr(var, '=', string("$8")), current->instr.back());
+			}
 		}
 		else if(t->rhs[0] == "WHILE") { // WHILE LPAREN test RPAREN LBRACE statements RBRACE 
 			loopCode(t);
@@ -270,7 +284,7 @@ void Valid::exprCode(const string& var, Tree *t) {
 			exprCode(var, t->children[1]);
 		}
 		else if(t->rhs[0] == "NULL") { // factor NULL
-			throw string("Attempting to dereference NULL");
+			current->addInstr(new Instr(var, '=', string("NULL")), current->instr.back());
 		}
 		else if(t->rhs[0] == "ID" || t->rhs[0] == "NUM") {
 			current->addInstr(new Instr(var, '=', t->children[0]->rhs[0]), current->instr.back()); 
@@ -278,13 +292,13 @@ void Valid::exprCode(const string& var, Tree *t) {
 		else if(t->rhs[0] == "AMP") { // factor AMP lvalue
 			string id = getLvalue(t->children[1]);
 
-			current->addInstr(new Instr(var, '=', Args(id, '&'))); 
+			current->addInstr(new Instr(var, '=', Args(id, '&')), current->instr.back()); 
 		}
-		else if(t->rhs[0] == "STAR") {
+		else if(t->rhs[0] == "STAR") { // factor STAR factor
 			string temp = makePTemp();
 
 			exprCode(temp, t->children[1]);
-			current->addInstr(new Instr(var, '=', Args(temp, '@'))); 
+			current->addInstr(new Instr(var, '=', Args(temp, '@')), current->instr.back()); 
 		}
 	}
 	else if ((t->lhs == "expr" || t->lhs == "term") && t->rhs.size() == 3) {
