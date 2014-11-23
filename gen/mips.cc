@@ -48,7 +48,7 @@ void Mips::body() {
 					}
 				break;
 				case '@' :
-					store(instr->var, instr->args.var1);
+					store(instr->var, instr->args);
 				break;
 				case 'P' :
 					if(instr->var != "$1") {	// Print takes in $1
@@ -102,9 +102,14 @@ void Mips::epilogue() {
 		 << "lw $31, -" << whereIs31 << "($30)" << endl << "jr $31" << endl;
 }
 
-void Mips::store(string& a, string& b) {
+
+void Mips::store(string& a, Args& b) {
 	is(string("$5"), a);
-	is(string("$6"), b);
+	is(string("$6"), b.var1);
+
+	if(b.cmd == '@') {
+		code << "lw $6, 0($6)" << endl;
+	}
 
 	code << "sw $6, 0($5)" << endl;
 }
@@ -124,6 +129,8 @@ void Mips::pointersFun(Instr* instr) {
 
 				code << "sub $30, $30, $4" << endl
 					 << "sw $" << getLocation(instr->args.var1) << ", " << loc << "($29)" << endl;
+				
+				current->symbolsTable[instr->args.var1]->loc = loc;
 			}
 
 			ss << loc;

@@ -10,12 +10,14 @@ namespace Mips {
 	void body();
 	void epilogue();
 
+	string whatIs(string&);
+
 	void operation(Instr*);
 	void is(string, string);
 	void genTest(Args&, string, string);
 	void pointersFun(Instr*);
 
-	void store(string&, string&);
+	void store(string&, Args&);
 
 	bool isPointer(string&);
 	bool isStored(string&);

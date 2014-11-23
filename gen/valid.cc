@@ -173,8 +173,7 @@ void Valid::statementsCode(Tree *t) {
 		else if(t->rhs[0] == "lvalue") { // lvalue BECOMES expr SEMI
 			Args lv = getLvalue(t->children[0]);
 			if(lv.cmd == '@') {
-				string temp = makeTemp();
-				exprCode(temp, t->children[2]);
+				Args temp = getExpr(t->children[2]);
 				current->addInstr(new Instr(lv.var1, '@', temp), current->instr.back());
 			}
 			else {
@@ -345,6 +344,22 @@ Args Valid::getStarFactor(Tree *t) {
 	else {
 		throw string("Yo dawg, I heard you like pointers");
 	}
+}
+
+Args Valid::getExpr(Tree *t) {
+	if(*t == "expr term" || *t == "term factor") {
+		return getExpr(t->children[0]);
+	}
+	else if(t->lhs =="factor") {
+		return getFactor(t);
+	}
+	else if ((t->lhs == "expr" || t->lhs == "term") && t->rhs.size() == 3) {
+		string temp = "$7";
+		exprCode(temp, t);
+		return Args(temp);
+	}
+	else
+		throw string("You shouldn't be here");
 }
 
 void Valid::exprCode(const string& var, Tree *t) {

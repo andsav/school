@@ -28,7 +28,7 @@ namespace Valid {
 	Args getAmpLvalue(Tree*);
 	Args getStarFactor(Tree*);
 	Args getFactor(Tree*);
-
+	Args getExpr(Tree*);
 
 	void exprCode(const string&, Tree*);
 
