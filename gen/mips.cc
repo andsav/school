@@ -102,16 +102,25 @@ void Mips::epilogue() {
 		 << "lw $31, -" << whereIs31 << "($30)" << endl << "jr $31" << endl;
 }
 
+string Mips::whatIs(string& a, string alt) {
+	if(!isVar(a) || isStored(a)) {
+		is(alt, a);
+		return alt;
+	}
+	stringstream ss;
+	ss << getLocation(a);
+	return string("$" + ss.str());
+}
 
 void Mips::store(string& a, Args& b) {
-	is(string("$5"), a);
-	is(string("$6"), b.var1);
+	string temp1 = whatIs(a, string("$5"));
+	string temp2 = whatIs(b.var1, string("$6"));
 
 	if(b.cmd == '@') {
-		code << "lw $6, 0($6)" << endl;
+		code << "lw " << temp2 << ", 0(" << temp2 << ")" << endl;
 	}
 
-	code << "sw $6, 0($5)" << endl;
+	code << "sw " << temp2 << ", 0(" << temp1 << ")" << endl;
 }
 
 void Mips::pointersFun(Instr* instr) {
@@ -134,14 +143,14 @@ void Mips::pointersFun(Instr* instr) {
 			}
 
 			ss << loc;
-			is(string("$5"), ss.str());
 
+			is(string("$5"), ss.str());
 			code << "add $5, $29, $5" << endl;
+			
 			is(instr->var, string("$5"));
 		
 		break;
 		case '@' :
-			
 			is(string("$5"), instr->args.var1);
 			code << "lw $5, 0($5)" << endl;
 			is(instr->var, string("$5"));
@@ -154,6 +163,7 @@ void Mips::operation(Instr* instr) {
 	int a = getLocation(instr->args.var1);
 	int b = getLocation(instr->args.var2);
 	int var = getLocation(instr->var);
+	bool flag = 0;
 
 	if(a < 0) {
 		code << "lw $5, " << a << "($29)" << endl;
@@ -165,6 +175,7 @@ void Mips::operation(Instr* instr) {
 	}
 	if(var < 0) {
 		var = 7;
+		flag = 1;
 	}
 
 	switch(instr->args.cmd) {
@@ -188,7 +199,7 @@ void Mips::operation(Instr* instr) {
 		break;
 	}
 
-	if(var == 7) {
+	if(flag) {
 		code << "sw $7, " << getLocation(instr->var) << "($29)" << endl;
 	}
 }

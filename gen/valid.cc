@@ -113,6 +113,8 @@ void Valid::genCode(Tree* t) {
 
 			current->addInstr(new Instr(arg1, '=', string("$1")));
 			current->addInstr(new Instr(arg2, '=', string("$2")), current->instr.back());
+			// Empty register 2, for init
+			current->addInstr(new Instr(string("$2"), '=', string("$0")), current->instr.back());
 
 			// TODO: MIPS array
 			//
@@ -353,13 +355,11 @@ Args Valid::getExpr(Tree *t) {
 	else if(t->lhs =="factor") {
 		return getFactor(t);
 	}
-	else if ((t->lhs == "expr" || t->lhs == "term") && t->rhs.size() == 3) {
+	else {
 		string temp = "$7";
 		exprCode(temp, t);
-		return Args(temp);
+		return Args(temp); 
 	}
-	else
-		throw string("You shouldn't be here");
 }
 
 void Valid::exprCode(const string& var, Tree *t) {
@@ -381,6 +381,12 @@ void Valid::exprCode(const string& var, Tree *t) {
 		}
 		else if(t->rhs[0] == "STAR") { // factor STAR factor
 			starFactorCode(var, t->children[1]);
+		}
+		else if(t->rhs[0] == "NEW") { // factor NEW INT LBRACK expr RBRACK
+			string temp = makeTemp();
+			exprCode(temp, t->children[3]);
+
+			current->addInstr(new Instr(temp, 'N', var), current->instr.back()); 
 		}
 	}
 	else if ((t->lhs == "expr" || t->lhs == "term") && t->rhs.size() == 3) {

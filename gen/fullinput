@@ -19,7 +19,40 @@ RPAREN )
 LBRACE {
 dcls dcls dcl BECOMES NULL SEMI
 dcls dcls dcl BECOMES NULL SEMI
+dcls dcls dcl BECOMES NULL SEMI
+dcls dcls dcl BECOMES NUM SEMI
+dcls dcls dcl BECOMES NUM SEMI
+dcls dcls dcl BECOMES NUM SEMI
 dcls
+dcl type ID
+type INT
+INT int
+ID c
+BECOMES =
+NUM 5
+SEMI ;
+dcl type ID
+type INT
+INT int
+ID d
+BECOMES =
+NUM 7
+SEMI ;
+dcl type ID
+type INT
+INT int
+ID e
+BECOMES =
+NUM 8
+SEMI ;
+dcl type ID
+type INT STAR
+INT int
+STAR *
+ID f
+BECOMES =
+NULL NULL
+SEMI ;
 dcl type ID
 type INT STAR
 INT int
@@ -37,7 +70,45 @@ BECOMES =
 NULL NULL
 SEMI ;
 statements statements statement
+statements statements statement
+statements statements statement
+statements statements statement
+statements statements statement
+statements statements statement
 statements
+statement lvalue BECOMES expr SEMI
+lvalue ID
+ID f
+BECOMES =
+expr term
+term factor
+factor AMP lvalue
+AMP &
+lvalue ID
+ID c
+SEMI ;
+statement lvalue BECOMES expr SEMI
+lvalue ID
+ID g
+BECOMES =
+expr term
+term factor
+factor AMP lvalue
+AMP &
+lvalue ID
+ID d
+SEMI ;
+statement lvalue BECOMES expr SEMI
+lvalue ID
+ID h
+BECOMES =
+expr term
+term factor
+factor AMP lvalue
+AMP &
+lvalue ID
+ID e
+SEMI ;
 statement lvalue BECOMES expr SEMI
 lvalue STAR factor
 STAR *
@@ -51,11 +122,41 @@ STAR *
 factor ID
 ID h
 SEMI ;
-RETURN return
+statement lvalue BECOMES expr SEMI
+lvalue ID
+ID h
+BECOMES =
+expr term
+term factor
+factor ID
+ID f
+SEMI ;
+statement lvalue BECOMES expr SEMI
+lvalue STAR factor
+STAR *
+factor ID
+ID h
+BECOMES =
 expr term
 term factor
 factor NUM
-NUM 0
+NUM 100
+SEMI ;
+RETURN return
+expr term
+term term STAR factor
+term term STAR factor
+term factor
+factor STAR factor
+STAR *
+factor ID
+ID f
+STAR *
+factor ID
+ID d
+STAR *
+factor ID
+ID b
 SEMI ;
 RBRACE }
 EOF EOF

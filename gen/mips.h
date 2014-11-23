@@ -10,7 +10,7 @@ namespace Mips {
 	void body();
 	void epilogue();
 
-	string whatIs(string&);
+	string whatIs(string&, string);
 
 	void operation(Instr*);
 	void is(string, string);
