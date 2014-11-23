@@ -4,7 +4,11 @@ Tree parseTree;
 int tempCount = 0;
 int ifCount = 0;
 int loopCount = 0;
-int offset = 0;;
+int offset = 0;
+
+bool isPrint = 0;
+bool isInit = 0;
+bool twoInts = 0;
 
 char Valid::operation(const string &s) {
 	if(s == "==")
@@ -106,19 +110,13 @@ void Valid::genCode(Tree* t) {
 			string& arg1 = t->children[0]->children[3]->children[1]->rhs[0];
 			string& arg2 = t->children[0]->children[5]->children[1]->rhs[0];
 
-			bool arg1Type = (*t->children[0]->children[3]->children[0] == "type INT") ? 1 : 0;
+			twoInts = (*t->children[0]->children[3]->children[0] == "type INT") ? 1 : 0;
 
-			current->addSymbol(new Symbol(arg1, arg1Type));
+			current->addSymbol(new Symbol(arg1, twoInts));
 			current->addSymbol(new Symbol(arg2, 1));
 
 			current->addInstr(new Instr(arg1, '=', string("$1")));
 			current->addInstr(new Instr(arg2, '=', string("$2")), current->instr.back());
-			// Empty register 2, for init
-			current->addInstr(new Instr(string("$2"), '=', string("$0")), current->instr.back());
-
-			// TODO: MIPS array
-			//
-			//
 
 			returnTo = "$3";
 		}
@@ -169,6 +167,7 @@ void Valid::statementsCode(Tree *t) {
 	}
 	else if(t->lhs == "statement") {
 		if(t->rhs[0] == "PRINTLN") { // PRINTLN LPAREN expr RPAREN SEMI
+			isPrint = 1;
 			exprCode(string("$1"), t->children[2]);
 			current->addInstr(new Instr(string("$1"), 'P'), current->instr.back());
 		}
@@ -188,12 +187,27 @@ void Valid::statementsCode(Tree *t) {
 		else if(t->rhs[0] == "IF") { // IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE 
 			ifCode(t);
 		}
+		else if(t->rhs[0] == "DELETE") { // DELETE LBRACK RBRACK expr SEMI
+			isInit = 1;
+
+			Args temp = getExpr(t->children[3]);
+			if(temp.cmd != 0) {
+				current->addInstr(new Instr(string("$8"), '=', temp), current->instr.back()); 
+				current->addInstr(new Instr(string("$8"), 'D'), current->instr.back()); 
+			}
+			else {
+				current->addInstr(new Instr(temp.var1, 'D'), current->instr.back()); 
+			}
+		}
 	}
 }
 
-void Valid::testCode(Tree* t, string& temp1, string& temp2) {
+bool Valid::testCode(Tree* t, string& temp1, string& temp2) {
 	exprCode(temp1, t->children[0]);
 	exprCode(temp2, t->children[2]);
+
+	if(!(isInt(t->children[0]) || isInt(t->children[2]))) return 0;
+	return 1;
 }
 
 void Valid::ifCode(Tree* t) { // IF LPAREN test RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE 
@@ -203,11 +217,12 @@ void Valid::ifCode(Tree* t) { // IF LPAREN test RPAREN LBRACE statements RBRACE 
 
 	Args test = Args(temp1, operation(t->children[2]->children[1]->rhs[0]), temp2);
 
-	testCode(t->children[2], temp1, temp2);
+	bool pointers = testCode(t->children[2], temp1, temp2);
+
 	string id = makeIf();
 	origin = current->instr.back();
 
-	current->addInstr(new Instr(id, 'I', test), origin);
+	current->addInstr(new Instr(id, (pointers ? 'I' : 'l'), test), origin);
 
 	statementsCode(t->children[5]);
 	ifBlock = current->instr.back();
@@ -232,10 +247,10 @@ void Valid::loopCode(Tree* t) { // WHILE LPAREN test RPAREN LBRACE statements RB
 
 	current->addInstr(new Instr(id, 'W'), origin);
 	
-	testCode(t->children[2], temp1, temp2);
+	bool pointers = testCode(t->children[2], temp1, temp2);
 	testBlock = current->instr.back();
 
-	current->addInstr(new Instr(id, 'T', test), testBlock);
+	current->addInstr(new Instr(id, (pointers ? 'T' : 't'), test), testBlock);
 
 	statementsCode(t->children[5]);
 	loopBlock = current->instr.back();
@@ -329,6 +344,11 @@ Args Valid::getFactor(Tree *t) {
 	else if(t->rhs[0] == "STAR") { // factor STAR factor
 		return getStarFactor(t->children[1]);
 	}
+	else if(t->rhs[0] == "NEW") {
+		string temp = "$7";
+		exprCode(temp, t);
+		return Args(temp); 
+	}
 }
 
 Args Valid::getStarFactor(Tree *t) {
@@ -342,6 +362,11 @@ Args Valid::getStarFactor(Tree *t) {
 	}
 	else if(t->rhs[0] == "AMP") { // factor AMP lvalue
 		return getLvalue(t->children[1]);
+	}
+	else if(t->rhs[0] == "NEW") {
+		string temp = "$7";
+		exprCode(temp, t);
+		return Args(temp, '@'); 
 	}
 	else {
 		throw string("Yo dawg, I heard you like pointers");
@@ -383,10 +408,17 @@ void Valid::exprCode(const string& var, Tree *t) {
 			starFactorCode(var, t->children[1]);
 		}
 		else if(t->rhs[0] == "NEW") { // factor NEW INT LBRACK expr RBRACK
-			string temp = makeTemp();
-			exprCode(temp, t->children[3]);
+			isInit = 1;
 
-			current->addInstr(new Instr(temp, 'N', var), current->instr.back()); 
+			Args temp = getExpr(t->children[3]);
+
+			if(temp.cmd != 0) {
+				current->addInstr(new Instr(string("$8"), '=', temp), current->instr.back()); 
+				current->addInstr(new Instr(var, 'N', string("$8")), current->instr.back()); 
+			}
+			else {
+				current->addInstr(new Instr(var, 'N', temp), current->instr.back()); 
+			}
 		}
 	}
 	else if ((t->lhs == "expr" || t->lhs == "term") && t->rhs.size() == 3) {
@@ -408,10 +440,55 @@ void Valid::exprCode(const string& var, Tree *t) {
 		exprCode(temp, t->children[0]);
 		exprCode(var, t->children[2]);
 
-		current->addInstr(new Instr(var, '=', Args(temp, operation, var)), current->instr.back());
+		bool first = isInt(t->children[0]);
+		bool second = isInt(t->children[2]);
+
+		if(first ^ second) { // pointer + int
+			if(first) {
+				current->addInstr(new Instr(temp, '=', Args(temp, '*', "$4")), current->instr.back());
+			}
+			else {
+				current->addInstr(new Instr(var, '=', Args(var, '*', "$4")), current->instr.back());
+			}
+			current->symbolsTable[var]->isInt = 0;
+			current->addInstr(new Instr(var, '=', Args(temp, operation, var)), current->instr.back());
+		}
+		else if(!(first || second)) { // pointer - pointer
+			current->addInstr(new Instr(var, '=', Args(temp, operation, var)), current->instr.back());
+			current->addInstr(new Instr(var, '=', Args(var, '/', string("$4"))), current->instr.back());
+		}
+		else {
+			current->addInstr(new Instr(var, '=', Args(temp, operation, var)), current->instr.back());
+		}
 	}
 	else
 		throw string("You shouldn't be here");
+}
+
+bool Valid::isInt(Tree *t) {
+	if(*t == "expr term" || *t == "term factor") {
+		return isInt(t->children[0]);
+	}
+	else if(t->lhs =="factor") {
+		if(t->rhs[0] == "LPAREN") {  
+			return isInt(t->children[1]);
+		}
+		else if(t->rhs[0] == "NULL" || t->rhs[0] == "AMP") {
+			return 0;
+		}
+		else if(t->rhs[0] == "NUM" || t->rhs[0] == "STAR") {
+			return 1;
+		}
+		else if(t->rhs[0] == "ID") {
+			return current->symbolsTable[t->children[0]->rhs[0]]->isInt;
+		}
+	}
+	else if ((t->lhs == "expr" || t->lhs == "term") && t->rhs.size() == 3) {
+		return isInt(t->children[0]) && isInt(t->children[2]);
+	}
+	else {
+		throw string("One does not simply get types");
+	}
 }
 
 void Valid::genCode() {

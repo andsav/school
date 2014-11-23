@@ -15,5 +15,10 @@ tst:
 	mv fullinput ..
 	@g++ -g *.cc
 
+uw:
+	@cd test; \
+	cat ./input | ./scan | ./parse | ./gen > 1.mips; \
+	scp 1.mips a3savin@linux.student.cs.uwaterloo.ca:~/cs241/test
+
 zip:
 	zip submit.zip *.cc *h

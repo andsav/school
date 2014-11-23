@@ -6,8 +6,15 @@ vector<string> active;
 void Loc::genLoc() {
 	offset = 0;
 
-	for(int i=28; i>14; --i) {
+	for(int i=28; i>13; --i) {
 		freeRegs.push(i);
+	}
+	if(!isInit) {
+		freeRegs.push(13);
+		freeRegs.push(12);
+	}
+	if(!isPrint) {
+		freeRegs.push(10);
 	}
 
 	FOREACH(program) {

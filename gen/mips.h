@@ -12,14 +12,17 @@ namespace Mips {
 
 	string whatIs(string&, string);
 
-	void operation(Instr*);
-	void is(string, string);
-	void genTest(Args&, string, string);
+	void genNew(Instr*);
+	void genDelete(string&);
+
+	void genTest(Args&, string, string, bool pointers = 0);
 	void pointersFun(Instr*);
 
 	void store(string&, Args&);
+	void is(string, string);
+	void operation(Instr*);
 
-	bool isPointer(string&);
+
 	bool isStored(string&);
 	int getLocation(string&);
 }

@@ -16,7 +16,7 @@ namespace Valid {
 	void genCode(Tree*);
 	void genCode();
 
-	void testCode(Tree*, string&, string&);
+	bool testCode(Tree*, string&, string&);
 	void dclsCode(Tree*);
 	void statementsCode(Tree*);
 
@@ -29,6 +29,8 @@ namespace Valid {
 	Args getStarFactor(Tree*);
 	Args getFactor(Tree*);
 	Args getExpr(Tree*);
+
+	bool isInt(Tree*);
 
 	void exprCode(const string&, Tree*);
 

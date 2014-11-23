@@ -1,7 +1,6 @@
 #include "Mips.h"
 
 stringstream code;
-int whereIs31;
 
 void Mips::genCode() {
 	prologue();
@@ -11,18 +10,53 @@ void Mips::genCode() {
 
 void Mips::prologue() {
 	offset += 2;
-	whereIs31 = 4*offset-4;
-	code << ".import print" << endl
-		 << "lis $10" << endl << ".word print" << endl
-		 << "sw $31, -" << whereIs31 << "($30)"<< endl
-		 << "add $29, $30, $0" << endl
-		 << "lis $11" << endl << ".word 1" << endl
+
+	if(isPrint) {
+		code << ".import print" << endl;
+	}
+	if(isInit) {
+		code << ".import init" << endl 
+			 << ".import new" << endl
+			 << ".import delete" << endl;
+	}
+
+	code << "lis $4" << endl << ".word 8" << endl
+		 << "sub $29, $30, $4" << endl
+		 << "sw $31, 4($29)"<< endl;
+
+	code << "lis $11" << endl << ".word 1" << endl
 		 << "lis $4" << endl 
 		 << ".word " << (4*offset) << endl
 	     << "sub $30, $30, $4" << endl
 		 << "lis $4" << endl 
-		 << ".word 4" << endl
-		 << ";;;;;;; END PROLOGUE ;;;;;;;" << endl << endl;
+		 << ".word 4" << endl;
+
+
+	if(isPrint) {
+		code << "lis $10" << endl << ".word print" << endl;
+	}
+	if(isInit) {
+		code << "lis $12" << endl << ".word init" << endl;
+
+		code << "sub $30, $30, $4" << endl;
+
+		if(twoInts) {
+			code << "add $5, $2, $0" << endl
+				 << "add $2, $0, $0" << endl
+				 << "jalr $12" << endl
+				 << "add $2, $5, $0" << endl;
+		}
+		else {
+			code << "jalr $12" << endl;
+		}
+
+		code << "add $30, $30, $4" << endl;
+
+		code << "lis $12" << endl << ".word new" << endl
+		 	 << "lis $13" << endl << ".word delete" << endl;
+	}
+
+	code << ";;;;;;; END PROLOGUE ;;;;;;;" << endl << endl;
 }
 
 void Mips::body() {
@@ -51,14 +85,21 @@ void Mips::body() {
 					store(instr->var, instr->args);
 				break;
 				case 'P' :
+					code << "sub $30, $30, $4" << endl;
 					if(instr->var != "$1") {	// Print takes in $1
 						is(string("$1"), instr->var);
 					}
-					code << "jalr $10" << endl;
+					code << "jalr $10" << endl
+						 << "add $30, $30, $4" << endl;
 				break;
 
 				case 'I' :
 					genTest(instr->args, instr->var, string("else" + instr->var));
+					code << "begin" << instr->var << ": " << endl;
+				break;
+
+				case 'l' :
+					genTest(instr->args, instr->var, string("else" + instr->var), 1);
 					code << "begin" << instr->var << ": " << endl;
 				break;
 
@@ -81,13 +122,27 @@ void Mips::body() {
 					code << "begin" << instr->var << ": " << endl;
 				break;
 
+				case 't' :
+					genTest(instr->args, instr->var, string("end" + instr->var), 1);
+					code << "begin" << instr->var << ": " << endl;
+				break;
+
 				case 'w':
 					code << "beq $0, $0, test" << instr->var << endl
 							  << "end" << instr->var << ": " << endl;
 		
 				break;
 
+				case 'N' :
+					genNew(instr);
+				break;
+
+				case 'D' :
+					genDelete(instr->var);
+				break;
+
 				default :
+					throw string("Something bad happened");
 				break;
 			}
 		}
@@ -96,10 +151,7 @@ void Mips::body() {
 
 void Mips::epilogue() {
 	code << endl << ";;;;;;; BEGIN EPILOGUE ;;;;;;;" << endl
-		 << "lis $4" << endl 
-		 << ".word " << (4*offset) << endl
-	     << "add $30, $30, $4" << endl
-		 << "lw $31, -" << whereIs31 << "($30)" << endl << "jr $31" << endl;
+		 << "lw $31, 4($29)" << endl << "jr $31" << endl;
 }
 
 string Mips::whatIs(string& a, string alt) {
@@ -291,9 +343,11 @@ void Mips::is(string a, string b) {
 		}
 	}
 }
-void Mips::genTest(Args& test, string id, string go) {
+void Mips::genTest(Args& test, string id, string go, bool pointers) {
 	int a = getLocation(test.var1);
 	int b = getLocation(test.var2);
+
+	string slt = (pointers ? "sltu" : "slt");
 
 	if(a < 0) {
 		code << "lw $5, " << a << "($29)" << endl;
@@ -312,37 +366,41 @@ void Mips::genTest(Args& test, string id, string go) {
 			code << "beq $" << a << ", $" << b << ", " << go << endl;
 		break;
 		case '<' :
-			code << "slt $7, $" << a << ", $" << b << endl
+			code << slt << " $7, $" << a << ", $" << b << endl
 				 << "beq $7, $0, " << go << endl;
 		break;
 		case 'L' :
 			code << "beq $" << a << ", $" << b << ", begin" << id << endl
-				 << "slt $7, $" << a << ", $" << b << endl
+				 << slt << " $7, $" << a << ", $" << b << endl
 				 << "beq $7, $0, " << go << endl;
 		break;
 		case '>' :
 			code << "beq $" << a << ", $" << b << ", " << go << endl
-				 << "slt $7, $" << a << ", $" << b << endl
+				 << slt << " $7, $" << a << ", $" << b << endl
 			  	 << "bne $7, $0, " << go << endl;
 		break;
 		case 'G' :
-			code << "slt $7, $" << a << ", $" << b << endl
+			code << slt << " $7, $" << a << ", $" << b << endl
 				 << "bne $7, $0, " << go << endl;
 		break;
 	}
 }
 
-bool Mips::isPointer(string& s) {
-	if(s[0] == 'p')
-		return 1;
+void Mips::genNew(Instr* instr) {
+	is(string("$1"), instr->args.var1);
+	code << "sub $30, $30, $4" << endl
+		 << "jalr $12" << endl
+		 << "add $30, $30, $4" << endl;
+		 
+	is(instr->var, string("$3"));
+}
 
-	if(!isVar(s))
-		return 0;
-	
-	if(!current->symbolsTable[s]->isInt)
-		return 1;
+void Mips::genDelete(string& s) {
+	is(string("$1"), s);
+	code << "sub $30, $30, $4" << endl
+		 << "jalr $13" << endl
+		 << "add $30, $30, $4" << endl;
 
-	return 0;
 }
 
 bool Mips::isStored(string& s) {

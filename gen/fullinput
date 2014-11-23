@@ -17,146 +17,30 @@ INT int
 ID b
 RPAREN )
 LBRACE {
-dcls dcls dcl BECOMES NULL SEMI
-dcls dcls dcl BECOMES NULL SEMI
-dcls dcls dcl BECOMES NULL SEMI
-dcls dcls dcl BECOMES NUM SEMI
-dcls dcls dcl BECOMES NUM SEMI
-dcls dcls dcl BECOMES NUM SEMI
 dcls
-dcl type ID
-type INT
-INT int
-ID c
-BECOMES =
-NUM 5
-SEMI ;
-dcl type ID
-type INT
-INT int
-ID d
-BECOMES =
-NUM 7
-SEMI ;
-dcl type ID
-type INT
-INT int
-ID e
-BECOMES =
-NUM 8
-SEMI ;
-dcl type ID
-type INT STAR
-INT int
-STAR *
-ID f
-BECOMES =
-NULL NULL
-SEMI ;
-dcl type ID
-type INT STAR
-INT int
-STAR *
-ID g
-BECOMES =
-NULL NULL
-SEMI ;
-dcl type ID
-type INT STAR
-INT int
-STAR *
-ID h
-BECOMES =
-NULL NULL
-SEMI ;
-statements statements statement
-statements statements statement
-statements statements statement
-statements statements statement
-statements statements statement
-statements statements statement
 statements
-statement lvalue BECOMES expr SEMI
-lvalue ID
-ID f
-BECOMES =
-expr term
-term factor
-factor AMP lvalue
-AMP &
-lvalue ID
-ID c
-SEMI ;
-statement lvalue BECOMES expr SEMI
-lvalue ID
-ID g
-BECOMES =
-expr term
-term factor
-factor AMP lvalue
-AMP &
-lvalue ID
-ID d
-SEMI ;
-statement lvalue BECOMES expr SEMI
-lvalue ID
-ID h
-BECOMES =
-expr term
-term factor
-factor AMP lvalue
-AMP &
-lvalue ID
-ID e
-SEMI ;
-statement lvalue BECOMES expr SEMI
-lvalue STAR factor
-STAR *
-factor ID
-ID g
-BECOMES =
+RETURN return
 expr term
 term factor
 factor STAR factor
 STAR *
-factor ID
-ID h
-SEMI ;
-statement lvalue BECOMES expr SEMI
-lvalue ID
-ID h
-BECOMES =
-expr term
-term factor
-factor ID
-ID f
-SEMI ;
-statement lvalue BECOMES expr SEMI
-lvalue STAR factor
-STAR *
-factor ID
-ID h
-BECOMES =
+factor LPAREN expr RPAREN
+LPAREN (
+expr expr PLUS term
+expr expr PLUS term
 expr term
 term factor
 factor NUM
-NUM 100
-SEMI ;
-RETURN return
-expr term
-term term STAR factor
-term term STAR factor
+NUM 23
+PLUS +
 term factor
-factor STAR factor
-STAR *
 factor ID
-ID f
-STAR *
-factor ID
-ID d
-STAR *
-factor ID
-ID b
+ID a
+PLUS +
+term factor
+factor NUM
+NUM 4
+RPAREN )
 SEMI ;
 RBRACE }
 EOF EOF

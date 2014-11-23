@@ -101,6 +101,8 @@ Instr::Instr(char cmd, string args)
 	this->args = Args(args);
 }
 
+Instr::Instr(char cmd, Args args) : cmd(cmd), args(args) { }
+
 Instr::Instr(string var, char cmd, Args args) : var(var), cmd(cmd), args(args) { }
 
 Instr::Instr() : cmd(0) { 
@@ -141,7 +143,7 @@ Procedure::~Procedure() {
 void Procedure::addInstr(Instr* instr) {
 	instr->proc = this;
 	this->instr.push_back(instr);
-	
+
 	if(isVar(instr->var)) {
 		this->symbolsTable[instr->var]->def.second = this->instr.size();
 	}

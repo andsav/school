@@ -92,6 +92,7 @@ struct Instr {
 	Instr(string, char, string = "");
 	Instr(string, char, Args);
 	Instr(char, string);
+	Instr(char, Args);
 	
 	void del();
 
@@ -171,5 +172,7 @@ extern Tree parseTree;
 extern int tempCount, ifCount, loopCount, offset;
 
 extern stringstream code;
+
+extern bool isPrint, isInit, twoInts;
 
 #endif

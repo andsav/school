@@ -1,7 +1,20 @@
-int wain (int *a, int b) {
-	
-	*a = b + 4 + 3 * b;
+int wain(int *a, int b) {
+   int *d = NULL;
+   int i = 0;
 
-	return *a;
+   while (i < 1000000) {
+     d = new int[1023];
+     delete [] d;
+     i = i + 1;
+   }
 
+   d = new int[1023];
+
+   i = 0;
+   while (i < 1023) {
+     *(d+i) = i;
+     i = i + 1;
+   }
+
+   return *(d+42);
 }
