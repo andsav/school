@@ -22,3 +22,4 @@ uw:
 
 zip:
 	zip submit.zip *.cc *h
+	scp submit.zip a3savin@linux.student.cs.uwaterloo.ca:~/cs241/test/submit

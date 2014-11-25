@@ -8,6 +8,8 @@ namespace Loc {
 
 	void spill(string&, sortSymbol&);
 	void expire(string&);
+
+	vector<int> getUsedRegs();
 }
 
 #endif

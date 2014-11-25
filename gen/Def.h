@@ -45,6 +45,7 @@ struct Symbol {
 
 	string 			name;
 	bool 			isInt;
+	bool			isArg;
 
 	int 			loc;
 	pair<int, int> 	def;
@@ -108,6 +109,10 @@ struct Procedure {
 	map<string, Symbol*>					symbolsTable;
 	vector<string>							symbolsList;
 
+	vector<int>	usedRegs;
+
+	int offset;
+
 	Procedure();
 	Procedure(string);
 	~Procedure();
@@ -169,7 +174,7 @@ extern Procedure* current;
 
 extern Tree parseTree;
 
-extern int tempCount, ifCount, loopCount, offset;
+extern int tempCount, ifCount, loopCount;
 
 extern stringstream code;
 

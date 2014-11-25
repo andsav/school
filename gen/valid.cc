@@ -124,13 +124,34 @@ void Valid::genCode(Tree* t) {
 			program.push_front(Procedure(t->children[1]->rhs[0]));
 			current = &program.front();
 
-			dcls 			= t->children[5];
-			statements 		= t->children[6];
-			ret 			= t->children[8];
+			dcls 			= t->children[6];
+			statements 		= t->children[7];
+			ret 			= t->children[9];
 
-			// TODO
+			paramsCode(t->children[3]);
 
-			returnTo = "$5";
+			string reg1 = "$1";
+			switch (current->symbols.size()) {
+				case 0 :
+					current->addInstr(new Instr());
+				break;
+				case 1 :
+					current->addInstr(new Instr(current->symbols[0]->name, '=', reg1));
+				break;
+				case 2 :
+					current->addInstr(new Instr(current->symbols[0]->name, '=', reg1));
+					current->addInstr(new Instr(current->symbols[1]->name, '=', string("$2")), current->instr.back());
+				break;
+				default :
+					current->addInstr(new Instr(current->symbols[0]->name, '=', Args(reg1, '@')));
+					for(int i=1; i < current->symbols.size(); ++i) {
+						current->addInstr(new Instr(reg1, '=', Args(reg1, '+', string("$4"))), current->instr.back());
+						current->addInstr(new Instr(current->symbols[i]->name, '=', Args(reg1, '@')), current->instr.back());	
+					}
+				break;
+			}
+
+			returnTo = "$3";
 		}
 
 		dclsCode(dcls);
@@ -142,6 +163,30 @@ void Valid::genCode(Tree* t) {
 		genCode(t->children[0]);
 		genCode(t->children[1]);
 	}
+}
+
+void Valid::paramsCode(Tree* t) {
+	if(t->rhs.empty()) {
+		return;
+	}
+
+	if(t->lhs == "paramlist") {
+		string& name = t->children[0]->children[1]->rhs[0];
+		bool isInt = (*t->children[0]->children[0] == "type INT") ? 1 : 0;
+
+		current->addSymbol(new Symbol(name, isInt));
+
+		if(t->rhs.size() == 3) {
+			paramsCode(t->children[2]);
+		}
+	}
+	else {
+		paramsCode(t->children[0]);
+	}
+}
+
+void Valid::argsCode(Tree *t) {
+	throw string("There you are");
 }
 
 void Valid::dclsCode(Tree* t) {

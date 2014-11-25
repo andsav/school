@@ -3,68 +3,19 @@
 stringstream code;
 
 void Mips::genCode() {
-	prologue();
-	body();
-	epilogue();
-}
-
-void Mips::prologue() {
-	offset += 2;
-
-	if(isPrint) {
-		code << ".import print" << endl;
-	}
-	if(isInit) {
-		code << ".import init" << endl 
-			 << ".import new" << endl
-			 << ".import delete" << endl;
-	}
-
-	code << "lis $4" << endl << ".word 8" << endl
-		 << "sub $29, $30, $4" << endl
-		 << "sw $31, 4($29)"<< endl;
-
-	code << "lis $11" << endl << ".word 1" << endl
-		 << "lis $4" << endl 
-		 << ".word " << (4*offset) << endl
-	     << "sub $30, $30, $4" << endl
-		 << "lis $4" << endl 
-		 << ".word 4" << endl;
-
-
-	if(isPrint) {
-		code << "lis $10" << endl << ".word print" << endl;
-	}
-	if(isInit) {
-		code << "lis $12" << endl << ".word init" << endl;
-
-		code << "sub $30, $30, $4" << endl;
-
-		if(twoInts) {
-			code << "add $5, $2, $0" << endl
-				 << "add $2, $0, $0" << endl
-				 << "jalr $12" << endl
-				 << "add $2, $5, $0" << endl;
-		}
-		else {
-			code << "jalr $12" << endl;
-		}
-
-		code << "add $30, $30, $4" << endl;
-
-		code << "lis $12" << endl << ".word new" << endl
-		 	 << "lis $13" << endl << ".word delete" << endl;
-	}
-
-	code << ";;;;;;; END PROLOGUE ;;;;;;;" << endl << endl;
-}
-
-void Mips::body() {
 	Instr* instr;
 	FOREACH(program) {
 		current = &program[i];
 
-		code << "P" << current->name << ":" << endl;
+		code << endl << endl << "P" << current->name << ":" << endl;
+		
+		if(current->name != "wain") {
+			functionPrologue();
+		}
+		else {
+			prologue();
+		}
+
 		FOREACH_(current->instr, j) {
 			instr = current->instr[j];
 			code << endl << "; " << *instr;
@@ -146,12 +97,81 @@ void Mips::body() {
 				break;
 			}
 		}
+		if(current->name == "wain") {
+			epilogue();
+		}
+		else {
+			functionEpilogue();
+		}
 	}
+}
+
+void Mips::prologue() {
+	if(isPrint) {
+		code << ".import print" << endl;
+	}
+	if(isInit) {
+		code << ".import init" << endl 
+			 << ".import new" << endl
+			 << ".import delete" << endl;
+	}
+
+	code << "lis $4" << endl << ".word 8" << endl
+		 << "sub $29, $30, $4" << endl
+		 << "sw $31, 4($29)"<< endl;
+
+	code << "lis $11" << endl << ".word 1" << endl
+		 << "lis $4" << endl 
+		 << ".word " << (4*current->symbols.size()) << endl
+	     << "sub $30, $29, $4" << endl
+		 << "lis $4" << endl 
+		 << ".word 4" << endl;
+
+
+	if(isPrint) {
+		code << "lis $10" << endl << ".word print" << endl;
+	}
+	if(isInit) {
+		code << "lis $12" << endl << ".word init" << endl;
+
+		code << "sub $30, $30, $4" << endl;
+
+		if(twoInts) {
+			code << "add $5, $2, $0" << endl
+				 << "add $2, $0, $0" << endl
+				 << "jalr $12" << endl
+				 << "add $2, $5, $0" << endl;
+		}
+		else {
+			code << "jalr $12" << endl;
+		}
+
+		code << "add $30, $30, $4" << endl;
+
+		code << "lis $12" << endl << ".word new" << endl
+		 	 << "lis $13" << endl << ".word delete" << endl;
+	}
+
+	code << ";;;;;;; END PROLOGUE ;;;;;;;" << endl << endl;
+}
+
+void Mips::functionPrologue() {
+	code << "sw $31, -4($30)" << endl
+		 << "sub $30, $30 $4" << endl;
 }
 
 void Mips::epilogue() {
 	code << endl << ";;;;;;; BEGIN EPILOGUE ;;;;;;;" << endl
-		 << "lw $31, 4($29)" << endl << "jr $31" << endl;
+		 << "lis $4" << endl << ".word " << (4*current->symbols.size()) << endl
+		 << "add $30, $30, $4" << endl
+		 << "lw $31, 4($29)" << endl << "jr $31" << endl
+		 << endl << ";;;;;;;; END EPILOGUE ;;;;;;;;" << endl;
+}
+
+void Mips::functionEpilogue() {
+	code << endl << "add $30, $30, $4" << endl
+		 << "lw $31, -4($30)" << endl
+		 << "jr $31";
 }
 
 string Mips::whatIs(string& a, string alt) {
@@ -185,11 +205,10 @@ void Mips::pointersFun(Instr* instr) {
 			loc = getLocation(instr->args.var1);
 
 			if(loc > 0) {
-				++offset;
-				loc = -offset*4;
+				++current->offset;
+				loc = -current->offset*4;
 
-				code << "sub $30, $30, $4" << endl
-					 << "sw $" << getLocation(instr->args.var1) << ", " << loc << "($29)" << endl;
+				code << "sw $" << getLocation(instr->args.var1) << ", " << loc << "($29)" << endl;
 				
 				current->symbolsTable[instr->args.var1]->loc = loc;
 			}
@@ -203,9 +222,35 @@ void Mips::pointersFun(Instr* instr) {
 		
 		break;
 		case '@' :
-			is(string("$5"), instr->args.var1);
-			code << "lw $5, 0($5)" << endl;
-			is(instr->var, string("$5"));
+			if(isReg(instr->args.var1)) {
+				if(isReg(instr->var)) {
+					code << "lw " << instr->var << ", 0(" << instr->args.var1 << ")" << endl;
+				}
+				else if(!isStored(instr->var)) {
+					code << "lw $" << getLocation(instr->var) << ", 0(" << instr->args.var1 << ")" << endl;
+				}
+				else {
+					code << "lw $5, 0(" << instr->args.var1 << ")" 
+						 << "sw $5," << getLocation(instr->var) << "($29)"<< endl;
+				}
+			}
+			else if(!isStored(instr->args.var1)) {
+				if(isReg(instr->var)) {
+					code << "lw " << instr->var << ", 0($" << getLocation(instr->args.var1) << ")" << endl;
+				}
+				else if(!isStored(instr->var)) {
+					code << "lw $" << getLocation(instr->var) << ", 0($" << getLocation(instr->args.var1) << ")" << endl;
+				}
+				else {
+					code << "lw $5, 0($" << getLocation(instr->args.var1) << ")" 
+						 << "sw $5," << getLocation(instr->var) << "($29)"<< endl;
+				}
+			}
+			else {
+				is(string("$5"), instr->args.var1);
+				code << "lw $5, 0($5)" << endl;
+				is(instr->var, string("$5"));
+			}
 
 		break;
 	}
@@ -390,17 +435,29 @@ void Mips::genNew(Instr* instr) {
 	is(string("$1"), instr->args.var1);
 	code << "sub $30, $30, $4" << endl
 		 << "jalr $12" << endl
-		 << "add $30, $30, $4" << endl;
+		 << "add $30, $30, $4" << endl
+		 << "bne $3, $0, 1" << endl
+		 << "add $3, $11, $0" << endl;
 		 
 	is(instr->var, string("$3"));
 }
 
 void Mips::genDelete(string& s) {
 	is(string("$1"), s);
+	code << "beq $11, $1, 3" << endl;
 	code << "sub $30, $30, $4" << endl
 		 << "jalr $13" << endl
 		 << "add $30, $30, $4" << endl;
+}
 
+void Mips::push(int i) {
+	code << "sw $" << i << ", -4($30)" << endl
+		 << "sub $30, $30, $4" << endl;
+}
+
+void Mips::pop(int i) {
+	code << "add $30, $30, $4" << endl
+		 << "lw $" << i << ", -4($30)" << endl;
 }
 
 bool Mips::isStored(string& s) {

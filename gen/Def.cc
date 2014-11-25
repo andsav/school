@@ -128,8 +128,8 @@ ostream& operator<<(ostream& out, Instr& instr) {
 /*
 *	PROCEDURE
 */
-Procedure::Procedure() { }
-Procedure::Procedure(string name) : name(name) { }
+Procedure::Procedure() : offset(0) { }
+Procedure::Procedure(string name) : offset(0), name(name) { }
 Procedure::~Procedure() {
 	this->symbolsTable.clear();
 

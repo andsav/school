@@ -7,8 +7,9 @@ namespace Mips {
 	void genCode();
 
 	void prologue();
-	void body();
 	void epilogue();
+	void functionPrologue();
+	void functionEpilogue();
 
 	string whatIs(string&, string);
 
@@ -22,6 +23,8 @@ namespace Mips {
 	void is(string, string);
 	void operation(Instr*);
 
+	void pop(int);
+	void push(int);
 
 	bool isStored(string&);
 	int getLocation(string&);

@@ -24,6 +24,9 @@ namespace Valid {
 	void ampLvalueCode(const string&, Tree*);
 	void starFactorCode(const string&, Tree*);
 
+	void paramsCode(Tree*);
+	void argsCode(Tree*);
+
 	Args getLvalue(Tree*);
 	Args getAmpLvalue(Tree*);
 	Args getStarFactor(Tree*);
