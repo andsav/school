@@ -11,23 +11,39 @@ int main() {
 
 		Valid::genCode();
 
-		//cout << *current;
-		//throw(string("die"));
-
-		FOREACH(current->symbols) {
-			current->symbols[i]->use.second = current->instr.size()-1;
+		/*
+		FOREACH(program) {
+			cout << endl << endl << program[i].name <<  ":" << endl;
+			cout << program[i];
+		}
+		throw(string("die"));
+		*/
+		FOREACH(program) {
+			current = &program[i];
+			FOREACH_(current->symbols, j) {
+				current->symbols[j]->use.second = current->instr.size()-1;
+			}
 		}
 
 		Loc::genLoc();
 
 		/*
-		FOREACH(current->symbols) {
-			cout << current->symbols[i]->name << " "
-				 << current->symbols[i]->def.first << " - " << current->symbols[i]->use.second
-				 << " ::" << current->symbols[i]->loc << endl;
+		FOREACH(program) {
+			current = &program[i];
+			cout << current->name << endl << endl;
+			FOREACH_(current->symbols, j) {
+				cout << current->symbols[j]->name << " "
+					 << current->symbols[j]->def.first << " - " << current->symbols[j]->use.second
+					 << " ::" << current->symbols[j]->loc << endl;
+			}
+			FOREACH_(current->usedRegs, j) {
+				cout << current->usedRegs[j] << endl;
+			}
 		}
-		*/
-
+		
+		throw string("HERE");
+	*/
+		
 		Mips::genCode();
 
 		cout << code.rdbuf();

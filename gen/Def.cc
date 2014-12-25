@@ -322,7 +322,12 @@ bool isReg(const string& s) {
 bool isVar(const string& s) {
 	if(s.empty())
 		return false;
+
+	if(s[0] == 'P')
+		return false;
+
 	if(s == "NULL")
 		return false;
+	
 	return (s[0] != '0' && !isReg(s) && !isNum(s));
 }

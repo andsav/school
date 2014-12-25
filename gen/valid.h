@@ -25,7 +25,8 @@ namespace Valid {
 	void starFactorCode(const string&, Tree*);
 
 	void paramsCode(Tree*);
-	void argsCode(Tree*);
+	int argsCode(Tree*);
+	vector<string> getArgs(Tree*);
 
 	Args getLvalue(Tree*);
 	Args getAmpLvalue(Tree*);
@@ -42,8 +43,7 @@ namespace Valid {
 
 	string makeIf();
 	string makeLoop();
-	string makeTemp();
-	string makePTemp();
+	string makeTemp(int isInt=1);
 
 }
 

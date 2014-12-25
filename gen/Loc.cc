@@ -2,21 +2,22 @@
 
 stack<int> freeRegs;
 vector<string> active;
-vector<int> usedRegs;
 
 void Loc::genLoc() {
-	for(int i=28; i>13; --i) {
-		freeRegs.push(i);
-	}
-	if(!isInit) {
-		freeRegs.push(13);
-		freeRegs.push(12);
-	}
-	if(!isPrint) {
-		freeRegs.push(10);
-	}
-
 	FOREACH(program) {
+		freeRegs = stack<int>();
+
+		for(int k=28; k>13; --k) {
+			freeRegs.push(k);
+		}
+		if(!isInit) {
+			freeRegs.push(13);
+			freeRegs.push(12);
+		}
+		if(!isPrint) {
+			freeRegs.push(10);
+		}
+
 		active.clear();
 		current = &program[i];
 		sortSymbol sortByLast(current, LAST_USE);
@@ -39,25 +40,24 @@ void Loc::genLoc() {
 				sort(active.begin(), active.end(), sortByLast);
 			}
 		}
+
+		// Produce the usedRegs array
+		int max = 0;
+		FOREACH(current->symbols) {
+			if(max == 28)
+				break;
+			if(current->symbols[i]->loc > max) 
+				max = current->symbols[i]->loc;
+		}
+
+		for(int i=12; i<=max; ++i) current->usedRegs.push_back(i);
+		if(max >= 10) current->usedRegs.push_back(10);
+
+		current->usedRegs.push_back(5);
+		current->usedRegs.push_back(6);
+		current->usedRegs.push_back(7);
+		current->usedRegs.push_back(8);
 	}
-}
-
-vector<int> Loc::getUsedRegs() {
-	if(!usedRegs.empty())
-		return usedRegs;
-
-	int max = 0;
-	FOREACH(current->symbols) {
-		if(max == 28)
-			break;
-		if(current->symbols[i]->loc > max) 
-			max = current->symbols[i]->loc;
-	}
-
-	for(int i=12; i<=max; ++i) usedRegs.push_back(i);
-	if(max >= 10) usedRegs.push_back(10);
-
-	return usedRegs;
 }
 
 void Loc::spill(string& var, sortSymbol& sortFunction) {

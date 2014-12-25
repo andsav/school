@@ -11,6 +11,8 @@ namespace Mips {
 	void functionPrologue();
 	void functionEpilogue();
 
+	void procedureCall(Instr*);
+
 	string whatIs(string&, string);
 
 	void genNew(Instr*);

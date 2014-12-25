@@ -18,6 +18,9 @@ void Mips::genCode() {
 
 		FOREACH_(current->instr, j) {
 			instr = current->instr[j];
+
+			if(instr->empty()) continue;
+
 			code << endl << "; " << *instr;
 
 			switch(instr->cmd) {
@@ -25,11 +28,32 @@ void Mips::genCode() {
 					if(instr->args.size() == 1) {
 						is(instr->var, instr->args.var1);
 					}
+					else if(instr->args.cmd == 'K') {
+						procedureCall(instr);
+					}
 					else if(instr->args.size() == 2) {
 						pointersFun(instr);
 					}
 					else {
-						operation(instr);
+						if(instr->args.cmd == '#') {
+							stringstream ss(instr->args.var2);
+							int num;
+							ss >> num;
+							num *= 4;
+
+							if(isReg(instr->var)) {
+								code << "lw " << instr->var << ", " << num << "(" << instr->args.var1 << ")" << endl;
+							}
+							else if(isStored(instr->var)) {
+								code << "lw $5, " << num << "(" << instr->args.var1 << ")" << endl
+									 << "sw $5, " << getLocation(instr->var) << "($29)" << endl;
+							}
+							else {
+								code << "lw $" << getLocation(instr->var) << ", " << num << "(" << instr->args.var1 << ")" << endl;
+							}
+						}
+						else
+							operation(instr);
 					}
 				break;
 				case '@' :
@@ -80,7 +104,7 @@ void Mips::genCode() {
 
 				case 'w':
 					code << "beq $0, $0, test" << instr->var << endl
-							  << "end" << instr->var << ": " << endl;
+						 << "end" << instr->var << ": " << endl;
 		
 				break;
 
@@ -91,6 +115,7 @@ void Mips::genCode() {
 				case 'D' :
 					genDelete(instr->var);
 				break;
+
 
 				default :
 					throw string("Something bad happened");
@@ -156,37 +181,92 @@ void Mips::prologue() {
 }
 
 void Mips::functionPrologue() {
-	code << "sw $31, -4($30)" << endl
-		 << "sub $30, $30 $4" << endl;
+	code << "lis $5" << endl << ".word 8" << endl
+		 << "sub $29, $30, $5" << endl
+		 << "sw $31, 4($29)"<< endl
+		 << "lis $5" << endl 
+		 << ".word " << (4*(current->symbols.size() + current->usedRegs.size()+1)) << endl
+	     << "sub $30, $29, $5" << endl;
+
+	FOREACH(current->usedRegs) {
+		int ofst = 4*(current->symbols.size()+i+1);
+		code << "sw $" << current->usedRegs[i] << ", -" << ofst << "($29)" << endl;
+	}
 }
 
 void Mips::epilogue() {
 	code << endl << ";;;;;;; BEGIN EPILOGUE ;;;;;;;" << endl
-		 << "lis $4" << endl << ".word " << (4*current->symbols.size()) << endl
-		 << "add $30, $30, $4" << endl
 		 << "lw $31, 4($29)" << endl << "jr $31" << endl
 		 << endl << ";;;;;;;; END EPILOGUE ;;;;;;;;" << endl;
 }
 
 void Mips::functionEpilogue() {
-	code << endl << "add $30, $30, $4" << endl
-		 << "lw $31, -4($30)" << endl
+	FOREACH(current->usedRegs) {
+		int ofst = 4*(current->symbols.size()+i+1);
+		code << "lw $" << current->usedRegs[i] << ", -" << ofst << "($29)" << endl;
+	}
+	code << "lis $5" << endl 
+		 << ".word 8" << endl
+	     << "add $30, $29, $5" << endl
+		 << "lw $31, 4($29)" << endl
 		 << "jr $31";
 }
 
+void Mips::procedureCall(Instr* instr) {
+	push(29);
+	code << "lis $5" << endl
+		 << ".word " << instr->args.var1 << endl
+		 << "jalr $5" << endl;
+	pop(29);
+
+	if(instr->args.var2 != "0" && instr->args.var2 != "1" && instr->args.var2 != "2") {
+		stringstream ss(instr->args.var2);
+		int num;
+		ss >> num;
+		num *= 4;
+
+		stringstream ss2;
+		ss2 << num;
+
+		is(string("$5"), ss2.str());
+		code << "add $30, $30, $5" << endl;
+	}
+	
+	is(instr->var, string("$3"));
+}
+
 string Mips::whatIs(string& a, string alt) {
-	if(!isVar(a) || isStored(a)) {
+	if(isReg(a)) {
+		return a;
+	}
+	else if(!isVar(a) || isStored(a)) {
 		is(alt, a);
 		return alt;
 	}
-	stringstream ss;
-	ss << getLocation(a);
-	return string("$" + ss.str());
+	else {
+		stringstream ss;
+		ss << getLocation(a);
+		return string("$" + ss.str());
+	}
 }
 
 void Mips::store(string& a, Args& b) {
-	string temp1 = whatIs(a, string("$5"));
-	string temp2 = whatIs(b.var1, string("$6"));
+	string temp1 = "$5";
+	string temp2 = "$6";
+
+	is(temp1, a);
+
+	if(b.cmd == '#') {
+		stringstream ss(b.var2);
+		int num;
+		ss >> num;
+		num *= 4;
+		
+		code << "sw " << temp1 << ", " << num << "(" << b.var1 << ")" << endl;
+		return;
+	}
+
+	is(temp2, b.var1);
 
 	if(b.cmd == '@') {
 		code << "lw " << temp2 << ", 0(" << temp2 << ")" << endl;
@@ -194,6 +274,7 @@ void Mips::store(string& a, Args& b) {
 
 	code << "sw " << temp2 << ", 0(" << temp1 << ")" << endl;
 }
+
 
 void Mips::pointersFun(Instr* instr) {
 	stringstream ss;
@@ -206,7 +287,7 @@ void Mips::pointersFun(Instr* instr) {
 
 			if(loc > 0) {
 				++current->offset;
-				loc = -current->offset*4;
+				loc = current->offset*-4;
 
 				code << "sw $" << getLocation(instr->args.var1) << ", " << loc << "($29)" << endl;
 				
@@ -230,7 +311,7 @@ void Mips::pointersFun(Instr* instr) {
 					code << "lw $" << getLocation(instr->var) << ", 0(" << instr->args.var1 << ")" << endl;
 				}
 				else {
-					code << "lw $5, 0(" << instr->args.var1 << ")" 
+					code << "lw $5, 0(" << instr->args.var1 << ")" << endl
 						 << "sw $5," << getLocation(instr->var) << "($29)"<< endl;
 				}
 			}
@@ -242,14 +323,14 @@ void Mips::pointersFun(Instr* instr) {
 					code << "lw $" << getLocation(instr->var) << ", 0($" << getLocation(instr->args.var1) << ")" << endl;
 				}
 				else {
-					code << "lw $5, 0($" << getLocation(instr->args.var1) << ")" 
+					code << "lw $5, 0($" << getLocation(instr->args.var1) << ")" << endl
 						 << "sw $5," << getLocation(instr->var) << "($29)"<< endl;
 				}
 			}
 			else {
-				is(string("$5"), instr->args.var1);
-				code << "lw $5, 0($5)" << endl;
-				is(instr->var, string("$5"));
+				is(string("$8"), instr->args.var1);
+				code << "lw $8, 0($8)" << endl;
+				is(instr->var, string("$8"));
 			}
 
 		break;
@@ -378,8 +459,7 @@ void Mips::is(string a, string b) {
 			}
 			else {
 				if(isStored(b)) {
-					code << "lw $5, " << getLocation(b) << "($29)" << endl 
-				  	  	 << "add $" << getLocation(a) << ", $0, $5" << endl;
+					code << "lw $" << getLocation(a) << ", " << getLocation(b) << "($29)" << endl;
 				}
 				else {
 					code << "add $" << getLocation(a) << ", $0, $" << getLocation(b) << endl;

@@ -50,6 +50,7 @@ struct Symbol {
 	int 			loc;
 	pair<int, int> 	def;
 	pair<int, int>	use;
+	vector<int> 	usedRegs;
 
 	Symbol(string);
 	Symbol(string, string);
