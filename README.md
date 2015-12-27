@@ -1,0 +1,1 @@
+`cd gen && make`
