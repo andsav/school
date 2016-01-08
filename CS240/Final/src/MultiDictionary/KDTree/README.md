@@ -1,0 +1,1 @@
+* We have n points P = {(x0, y0),(x1, y1), · · · ,(xn−1, yn−1)} in the plane.
