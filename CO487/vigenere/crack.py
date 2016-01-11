@@ -2,6 +2,19 @@ import fileinput
 import operator
 from config import frequencies
 
+
+def rotate(cipher_letter, key_letter):
+    alphabet = list('abcdefghijklmnopqrstuvwxyz')
+    position = (alphabet.index(cipher_letter) + alphabet.index(key_letter)) % alphabet.__len__()
+    return alphabet[position]
+
+
+def nth_sub_key(start, key_length, string):
+    letters_list = []
+    for i in range(start - 1, string.__len__(), key_length):
+        letters_list.append(string[i])
+    return ''.join(letters_list)
+
 # Read input and remove spaces/line breaks
 cipher_text = ''
 for line in fileinput.input():
@@ -34,14 +47,14 @@ for spacing in repeat_spacings:
             else:
                 factors[i] = 1
 
-## 1.3) Guess the key length (most common factor)
+## 1.3) Guess the key length (most common factor, it might be something else)
 
 key_length = max(factors.iteritems(), key = operator.itemgetter(1))[0]
 print "Guessing Key Length: ", key_length
 
-# 2) Find Key
+# 2) Find Encrypted Text
 
+## 2.1)
 
-
-# 3) Guess encrypted text
-
+for letter in range(1, key_length):
+    print nth_sub_key(letter, key_length, cipher_text)
