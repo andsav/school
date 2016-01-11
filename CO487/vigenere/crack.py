@@ -1,14 +1,47 @@
 import fileinput
-from config import *
+import operator
+from config import frequencies
 
 # Read input and remove spaces/line breaks
-input = ''
+cipher_text = ''
 for line in fileinput.input():
-    input = input + line.replace(" ", "").strip()
+    cipher_text = cipher_text + line.replace(" ", "").strip()
 
 # 1) Find Key Length
 
+## 1.1) Find repeated sequences of 3 to 5 letters
+
+sequences = {}
+repeat_spacings = []
+
+for sequence_length in range(3, cipher_text.__len__()):
+    for sequence_start in range(cipher_text.__len__() - sequence_length):
+        sequence = cipher_text[sequence_start : (sequence_start + sequence_length)]
+        if sequences.has_key(sequence):
+            repeat_spacings.append(sequence_start - sequences[sequence])
+        else:
+            sequences[sequence] = sequence_start
+
+## 1.2) Find factors for each spacing
+
+factors = {}
+
+for spacing in repeat_spacings:
+    for i in range(2, cipher_text.__len__()):
+        if spacing % i == 0:
+            if factors.has_key(i):
+                factors[i] += 1
+            else:
+                factors[i] = 1
+
+## 1.3) Guess the key length (most common factor)
+
+key_length = max(factors.iteritems(), key = operator.itemgetter(1))[0]
+print "Guessing Key Length: ", key_length
+
 # 2) Find Key
+
+
 
 # 3) Guess encrypted text
 
