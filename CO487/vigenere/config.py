@@ -1,8 +1,8 @@
 #Source : http://www.math.cornell.edu/~mec/2003-2004/cryptography/subs/frequencies.html
 
-frequencies = {
+english_frequencies = {
     'E': 12.02,
-    'T': 9.1,
+    'T': 9.11,
     'A': 8.12,
     'O': 7.68,
     'I': 7.31,
