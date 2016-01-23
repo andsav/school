@@ -4,7 +4,6 @@ from config import english_frequencies
 
 alphabet = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
-
 def rotate(letter, offset):
     return alphabet[(alphabet.index(letter) + offset) % 26]
 
