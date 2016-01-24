@@ -1,22 +1,17 @@
 #include <iostream>
 #include <vector>
-#include <sstream>
 
 using namespace std;
 
-unsigned int merge(vector<int> &integers, vector<int> &left, vector<int> &right);
-unsigned int merge_and_count(vector<int> &integers);
+unsigned long merge(vector<int> &integers, vector<int> &left, vector<int> &right);
+unsigned long merge_and_count(vector<int> &integers);
 
 int main() {
-    stringstream ss;
     string s;
     int i;
     vector<int> integers;
 
-    while(cin >> s) {
-        ss.clear();
-        ss.str(s);
-        ss >> i;
+    while(cin >> i) {
         integers.push_back(i);
     }
 
@@ -25,8 +20,10 @@ int main() {
     return 0;
 }
 
-unsigned int merge(vector<int> &integers, vector<int> &left, vector<int> &right) {
-    unsigned int i, j, count;
+unsigned long merge(vector<int> &integers, vector<int> &left, vector<int> &right) {
+    unsigned int i, j;
+    unsigned long count;
+
     i = 0;
     j = 0;
     count = 0;
@@ -54,7 +51,7 @@ unsigned int merge(vector<int> &integers, vector<int> &left, vector<int> &right)
     return count;
 }
 
-unsigned int merge_and_count(vector<int> &integers) {
+unsigned long merge_and_count(vector<int> &integers) {
     if(integers.size() < 2) return 0;
 
     int middle = (integers.size() + 1)/2;
@@ -63,3 +60,4 @@ unsigned int merge_and_count(vector<int> &integers) {
 
     return merge_and_count(left) + merge_and_count(right) + merge(integers, left, right);
 }
+
