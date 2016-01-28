@@ -1,0 +1,115 @@
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+	<head>
+	    <title>University of Waterloo &#8211; Central Authentication Service</title>
+	  <link rel="shortcut icon" type="image/icon" href="https://uwaterloo.ca/favicon.ico">
+	  <link rel="icon" href="images/favicon.ico" type="https://uwaterloo.ca/favicon.ico">
+      <link type="text/css" rel="stylesheet" href="themes/uw/cas.css" />
+	  <meta name="viewport" content="width=device-width, user-scalable=no">
+	</head>
+	<body id="cas">
+	<div id="topBar"></div>
+    <!--<div class="flc-screenNavigator-view-container">
+        <div class="fl-screenNavigator-view">
+            <div id="header" class="flc-screenNavigator-navbar fl-navbar fl-table">
+                <h1 id="app-name" class="fl-table-cell">Central Authentication Service (CAS)</h1>
+            </div>		
+            <div id="content" class="fl-screenNavigator-scroll-container">-->
+<div id="cas-authentication-container">
+
+<div id="logoContainer"><img src="images/logo.png" alt="uWaterloo Logo" /></div>
+
+
+
+<div class="standard">
+<form id="fm1" action="/cas/login;jsessionid=E6CE45348AC274682ECFA57650CAA265?service=http%3a%2f%2fsc-24018.math.uwaterloo.ca%2fa2%2flin%2fciphertext88.txt" method="post">
+	
+  
+  <div id="cas-username">
+  
+
+  
+  
+  
+  <div class="fieldLabel"><span class="accesskey">W</span>ATIAM ID</div>
+  <input id="username" name="username" tabindex="1" accesskey="w" type="text" value="" size="25"/>
+  
+  
+  </div>
+
+  <div id="cas-password">
+  
+  <div class="fieldLabel"><span class="accesskey">P</span>ASSWORD</div>
+  <input id="password" name="password" tabindex="2" accesskey="p" type="password" value="" size="25"/>
+  </div>
+  
+  <div id="cas-extra">
+  
+  
+  <div class="anchorContainer" id="forgotPaswC">
+		<a href="http://watiam.uwaterloo.ca/search/" tabindex="4">Forgot your password?</a>
+	</div>
+	
+  <input id="warn" name="warn" value="true" tabindex="5" accesskey="n" type="checkbox" /><span class="accesskey">N</span>otify me before logging into other sites. 
+      
+	  
+	  
+	  
+    <input type="hidden" name="lt" value="e1s1" />
+    <input type="hidden" name="_eventId"  value="submit" />
+  </div>
+  
+  <div id="cas-submit">
+  <input name="submit" tabindex="3" type="submit" value="LOGIN" />
+  </div>
+
+  
+  
+
+</form>
+
+</div>
+
+
+
+
+<!--                </div>
+                <div id="footer" class="fl-panel fl-note fl-bevel-white fl-font-size-80">
+                    <div>
+                        <p>Copyright &copy; 2005 - 2010 Jasig, Inc. All rights reserved.</p>
+                        <p>Powered by <a href="http://www.jasig.org/cas">Jasig Central Authentication Service 3.4.2.1</a></p>
+                    </div>
+                    <a href="http://www.jasig.org" title="go to Jasig home page"><img id="logo" src="images/ja-sig-logo.gif" width="118" height="31" alt="JA-SIG" title="go to Jasig home page" /></a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+-->
+<div id="footer">
+The University of Waterloo Central Authentication Service (CAS) provides single sign-on access to authenticated sites. 
+Ensure that you logout and exit your browser when finished.
+<br/>
+<div class="anchorContainer" style="margin-top:20px;"><a tabindex="6" href="https://cas.uwaterloo.ca/docs">Help</a></div>
+
+</div>
+
+</div>
+
+<script type="text/javascript">
+setTimeout(function(){document.getElementById('username').focus();},0);
+</script>
+
+</body>
+</html>
+
