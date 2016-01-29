@@ -55,9 +55,7 @@ class Linear
             # Bits used : U6, U8, U14, U16, P5, P7, P8
             bits = [ u[1], u[3], u[5], u[7], p[4], p[6], p[7] ].collect { |x| Integer(x) }
                 
-            if bits.inject(:^) == 1
-                ones += 1 
-            end
+            ones += 1 if bits.inject(:^) == 1
         end
         
         n = @ciphertexts.length
@@ -75,9 +73,7 @@ class Linear
 
             bits = [ u[1], u[5], u[9], u[13], p[0], p[3], p[8], p[11] ].collect { |x| Integer(x) }
 
-            if bits.inject(:^) == 1
-                ones += 1
-            end
+            ones += 1 if bits.inject(:^) == 1
         end
 
         n = @ciphertexts.length
@@ -97,9 +93,7 @@ class Linear
         
         possible_subkeys.each do |k|
             b = bias(k)
-            if max_bias[1] < b
-                max_bias = [k, b]
-            end
+            max_bias = [k, b] if max_bias[1] < b
         end
         
         max_bias
@@ -114,11 +108,7 @@ class Linear
             a.each do |k2|
                 k = k1 + "1110" + k2 + "0111" #partial subkey derived in q2b
                 b = bias2(k)
-                puts "#{k}: #{b}"
-
-                if max_bias[1] < b
-                    max_bias = [k, b]
-                end
+                max_bias = [k, b] if max_bias[1] < b
             end
         end
 
