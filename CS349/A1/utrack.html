@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>UTrack!</title>
+    <link rel="stylesheet" href="css/ext/bootstrap.css"/>
+    <link rel="stylesheet" href="css/utrack.css"/>
+</head>
+<body>
+
+<div id="app_container" class="container">
+
+    <header>
+        <h1 id="logo"><img src="images/logo.png" alt="UTrack"></h1>
+        <div class="hidden" id="buttons">
+            <nav class="navbar navbar-default">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="#" id="inputBtn">Input</a></li>
+                    <li><a href="#" id="analysisBtn">Analysis</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="panel panel-default" id="content">
+        <div class="panel-body">
+            <div id="inputDiv">
+                <div id="errorPrompt" class="hidden">
+                    <div class="alert alert-danger text-left"><i class="glyphicon glyphicon-warning-sign"></i> <span></span></div>
+                </div>
+                <form class="form-horizontal" id="inputForm">
+                    <div class="form-group">
+                        <label for="activity" class="col-sm-3 control-label">Activity</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="activity" class="form-control" id="activity" placeholder="Activity">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="time" class="col-sm-3 control-label">Time <span class="hidden-sm">Spent</span></label>
+                        <div class="col-sm-9">
+                            <input type="number" min="0" class="form-control" name="time" id="time" placeholder="Time spent (minutes)">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="form-group">
+                        <label for="energy" class="col-sm-3 control-label">Energy (<output name="energyVal" for="energy">1</output>/10)</label>
+                        <div class="col-sm-9 centeredSlider">
+                            <input type="range" min="1" max="10" step="1" value="1" id="energy" name="energy" oninput="this.form.energyVal.value=this.value">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="stress" class="col-sm-3 control-label">Stress (<output name="stressVal" for="stress">1</output>/10)</label>
+                        <div class="col-sm-9 centeredSlider">
+                            <input type="range" min="1" max="10" step="1" value="1" id="stress" name="stress" oninput="this.form.stressVal.value=this.value">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="happiness" class="col-sm-3 control-label">Happiness (<output name="happinessVal" for="happiness">1</output>/10)</label>
+                        <div class="col-sm-9 centeredSlider">
+                            <input type="range" min="1" max="10" step="1" value="1" id="happiness" name="happiness" oninput="this.form.happinessVal.value=this.value">
+                        </div>
+                    </div>
+                    <div class="text-right">
+                       <span id="lastEntry" class="hidden">(last entry at <span></span>)</span>
+                        &nbsp;
+                        <input class="btn btn-lg btn-default" type="submit" value="Submit" id="inputSubmit">
+                    </div>
+                </form>
+            </div>
+
+            <div id="analysisDiv" class="hidden">
+                <div class="col-md-3">
+                    <form class="form-horizontal" id="viewForm">
+                        <fieldset>
+                            <div class="form-group" id="selectGraph">
+                                <label class="col-md-6 control-label">View</label>
+                                <div class="col-md-6">
+                                    <div class="radio">
+                                        <label for="radios-0">
+                                            <input type="radio" name="radios" id="radios-0" value="0" checked>
+                                            Table
+                                        </label>
+                                    </div>
+                                    <div class="radio">
+                                        <label for="radios-1">
+                                            <input type="radio" name="radios" id="radios-1" value="1">
+                                            Scatterplot
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="displayOptions">
+                                <section data-graph="1" class="hidden">
+                                    <label class="col-md-6 control-label">Display</label>
+                                    <div class="col-md-6">
+                                        <div class="checkbox">
+                                            <label for="checkboxes-0">
+                                                <input type="checkbox" name="checkboxes" id="checkboxes-0" value="1" checked>
+                                                Energy
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label for="checkboxes-1">
+                                                <input type="checkbox" name="checkboxes" id="checkboxes-1" value="2" checked>
+                                                Stress
+                                            </label>
+                                        </div>
+                                        <div class="checkbox">
+                                            <label for="checkboxes-2">
+                                                <input type="checkbox" name="checkboxes" id="checkboxes-2" value="3" checked>
+                                                Happiness
+                                            </label>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+
+                        </fieldset>
+                    </form>
+                </div>
+                <div class="col-md-2"></div>
+                <div class="col-md-7" id="viewsDiv">
+                    <section id="tableView" data-graph="0">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Activity</th>
+                                <th style="width: 20%">Minutes</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                            </tbody>
+                        </table>
+                    </section>
+                    <section id="graphView" data-graph="1" class="hidden">
+                        <canvas>
+
+                        </canvas>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div id="unit_tests">
+        <a href="unit_tests.html" class="btn btn-danger">Run Unit Tests</a> &nbsp;
+        <a href="#" id="genData" class="btn btn-info">Generate Fake Data</a>
+    </div>
+</footer>
+
+<script src="js/ext/underscore.js"></script>
+<script src="js/model.js"></script>
+<script src="js/view.js"></script>
+<script src="js/utrack.js"></script>
+</body>
+</html>

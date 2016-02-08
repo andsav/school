@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- For mobile viewing -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"/>
+
+    <style>
+        .container {
+            max-width: 800px;
+            margin-bottom: 50px;
+        }
+        .img-responsive {
+            margin-top: 20px;
+            margin-bottom: 50px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>CS349 Assignment 1</h1>
+    <strong><em>Due: Jan 21 (Wednesday) 5PM EST</em></strong>
+
+    <div>
+        <h2>Assignment Goals</h2>
+
+        <p>
+            The goals of this assignment are to give you an opportunity to apply the concepts of:
+        </p>
+
+        <ul>
+            <li>
+                model, view, controller (MVC),
+            </li>
+            <li>
+                events and event listeners,
+            </li>
+            <li>
+                the interactor tree and DOM,
+            </li>
+            <li>
+                use of the HTML5 canvas, and
+            </li>
+            <li>
+                manipulation of the DOM.
+            </li>
+        </ul>
+
+        <p>
+        You will do so in the context of creating an interactive, single-page web app.
+        </p>
+    </div>
+
+    <div>
+        <h2>Assignment Overview</h2>
+        <p>
+            How is your mental and physical health affected by your activities? Good question!
+        </p>
+
+        <p>
+            In this assignment, you will create a "quantified self" web application called
+            <em>UTrack</em>, which allows users to track their daily activities and various health measures.
+            They will also be able to analyze the data through summaries you create.
+        </p>
+
+        <p>
+            Specifically, users will be able to choose from a list of activities, then indicate the time spent
+            on the activity, and their energy, stress, and happiness levels while performing that activity:
+            <img src="images/input.png" class="img-responsive">
+            As you can see in the mock-up, users can also view the last time they entered a data point, and what
+            that data point was.
+        </p>
+
+        <p>
+            The energy, stress, and happiness levels should be numbers: You should validate that the data entered
+            is a number before storing it. If it's not, you should alert the user in some fashion. The same
+            goes for the duration of the event (which should be a number in minutes). This alert should be
+            user-friendly and helpful.
+        </p>
+
+        <p>
+            The way the user enters their energy, stress, and happiness levels can be modified, as long as their
+            input resolves to a number. You should find an efficient, user-friendly way of supporting this
+            activity, so users aren't discouraged to enter data.
+        </p>
+
+
+        <p>
+            Users will be able to switch to a view that enables them to view summaries, graphs, and plots of their data:
+            <img src="images/table.png" class="img-responsive">
+
+            This analysis interface should, at a minimum, support the following views:
+        </p>
+
+        <ul>
+        <li>
+            A <em>table</em> showing a summary of the time spent in each activity,
+        </li>
+        <li>
+            And at least one graph that summarizes the data collected so far. This may be a bar graph
+            of total time spent per activity, scatterplots of health measures across activities, etc.
+            Your graphs should have labels, be scaled properly, and be generally easy to use and to understand.
+        </li>
+        </ul>
+
+        <p>
+            You will need to provide the necessary controls to allow the user to switch between these views and
+            choose any relevant parameters for visualizing the data.
+        </p>
+
+        <p>
+            As an example, here is a mock-up of what a graph may look like (note: you do not need to worry about
+            having text rotated as shown in the image -- that will be for a future assignment):
+            <img src="images/graph.png" class="img-responsive">
+        </p>
+    </div>
+
+
+    <div>
+        <h2>
+            Implementation Requirements
+        </h2>
+
+        <p>
+            Your implementation must make use of the model-view-controller architecture. Specifically,
+            you must implement the following models, stubbed out in <a href="js/model.js">model.js</a>:
+        </p>
+
+        <ul>
+            <li>
+                <code>ActivityStoreModel</code>
+            </li>
+            <li>
+                <code>GraphModel</code>
+            </li>
+        </ul>
+
+        <h3>ActivityStoreModel</h3>
+        <p>
+            The <code>ActivityStoreModel</code> represents the data points collected by the user. It should
+            implement a listener interface, as described in the supplied code. Briefly, other code should be
+            able to register with the model to know when a new data point has been added or deleted (and what that data
+            point was, and when it was added or deleted).
+        </p>
+
+        <h3>GraphModel</h3>
+        <p>
+            The <code>GraphModel</code> represents the currently chosen graph to render. It should also provide a
+            listener interface, as described in the supplied code. In short, code should be able to register with that model
+            to know when the chosen graph has changed, so the interface can update itself accordingly.
+        </p>
+    </div>
+
+    <div>
+        <h2>
+            Testing
+        </h2>
+        <p>
+            An essential part of software development is testing your code. Developing user interfaces is no different.
+        </p>
+
+        <p>
+            For unit testing assignments, we will be using <a href="http://mochajs.org/">Mocha</a>,
+            <a href="http://chaijs.com/">Chai</a>, and <a href="http://sinonjs.org/">Sinon</a>. All of the components
+            necessary to do unit testing are included, along with some sample unit tests.
+        </p>
+
+        <h3>How to Run the Unit Tests</h3>
+        <p>
+            When loaded, the <a href="unit_tests.html">unit_tests.html</a> file will execute the unit tests found in
+            <a href="js/unit_tests/provided_unit_tests.js">provided_unit_tests.js</a> and
+            <a href="js/unit_tests/marking_unit_tests.js">marking_unit_tests.js</a>. There is a link at the bottom
+            of the web app's page to go to this unit test. This link should remain within the code, so TAs can
+            easily execute your unit tests.
+        </p>
+
+        <p>
+            The provided_unit_tests.js file includes a number of unit tests to test basic aspects of your framework.
+            <em>You must create at least 5 additional unit tests for this assignment.</em> Add these unit tests after
+            the existing unit tests, and ensure they execute properly and without error! <strong>Note that the
+        unit tests, as provided, will fail until you implement the code missing in <code>model.js</code>.</strong>
+        </p>
+
+        <p>
+            The marking_unit_tests.js file is empty: Do not add anything to this. It will be overwritten with our own
+            unit tests at marking time, to further test your code.
+        </p>
+
+        <h3>What We Will Test for Marking</h3>
+        <p>
+            We will be testing your model-view-controller architecture, and the classes, in general,
+            to ensure they conform to the specifications provided.
+        </p>
+    </div>
+
+    <div>
+        <h3>Implementation Details and Constraints</h3>
+        <p>
+            You must complete the assignment within the following constraints:
+        </p>
+
+        <ul>
+        <li>You must use only HTML, JavaScript and CSS, and the included JavaScript and CSS files.
+            <em>You may not use any other third-party JavaScript or CSS files for this assignment, including
+                web frameworks.</em> However, we have included both underscore.js and Bootstrap's CSS. If you've
+            never used CSS before, Bootstrap can be a bit overwhelming to learn, at first. Thankfully,
+            it provides useful defaults, and this web app is not overly complicated or demanding in terms of layout.
+        </li>
+        <li>
+            When users do something like choose to switch between input and analysis,
+            you should modify the DOM in place, rather than directing users to a separate page. In other words,
+            <em>there should be only one web page that the user loads and interacts with -- they should never leave it</em>
+            (with the exception of the unit tests).
+            <em>We will take off significant marks if you redirect the user to another page.</em>
+        </li>
+        <li>
+            The wireframe designs are meant to be a suggestion for how the interface and interaction could be
+            supported. You have latitude to change how users provide input to the system, but it must be
+            <em>at least</em> as usable as the design we provide. You will also need to improve the visual design
+            beyond the sparse wireframe designs provided.
+        </li>
+        <li>
+            You must use the HTML5 canvas object to render your graphs. Demo code and links to tutorials and references
+            are included.
+        </li>
+        <li>
+            All of your JavaScript files should work with (and include) <code>'use strict';</code>.
+        </li>
+        <li>
+            You must use the <code>addEventListener()</code> means of responding to events in the browser.
+        </li>
+            <li>
+                You do not need to worry about storing data, though you may use window.localStorage in the browser,
+                if you wish. We provide a function to randomly generate data that you can use
+                to facilitate testing your graphs with.
+            </li>
+        <li>
+            You may use either tables or CSS to render the time summaries.
+        </li>
+        <li>
+            You may use <em>code snippets</em> from third-party sources, but not entire solutions. For example,
+            your graphing code <em>must be your own</em>. You must cite the use of any third-party code (including
+            a URL if the example was obtained online).
+        </li>
+        <li>
+            Your assignment may not make use of any external files loaded over the Internet.
+        </li>
+        </ul>
+    </div>
+
+    <div>
+        <h2>Marking</h2>
+        <p>
+            To receive a great mark, you must implement the system as described above, under the given constraints,
+            with all unit tests passing, while having an aesthetically pleasing design and a great user experience.
+        </p>
+        <p>
+            Easy, right?
+        </p>
+        <p>
+            As a <em>rough</em> guide, <em>about 25%</em> of your mark will be allocated to the visual design and user experience,
+            with the rest allocated to implementation concerns.
+        </p>
+        <p>
+            TAs will mark your assignment using the latest version of Chrome on whatever platform
+            they use on a daily basis. In theory, the specific platform shouldn't matter. If we
+            find platform differences, we'll handle them as they arise. They will mark the assignment
+            in "offline" mode (i.e., with no access to the Internet).
+        </p>
+
+    </div>
+
+    <div>
+        <h2>How to Submit</h2>
+        You will use subversion to both check out and submit your assignment. Details can be found on the
+        <a href="https://hci.cs.uwaterloo.ca/courses/CS349/w15/about.html#svn">course website</a>.
+    </div>
+
+</div>
+
+</body>
+</html>
+

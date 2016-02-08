@@ -1,0 +1,67 @@
+/* Put any additional CSS here */
+
+html, body {margin:0;padding:0;height:100%;}
+
+body {
+    background-image: url("../images/skin.png");
+}
+
+header {
+    text-align:center;
+    margin-bottom: 0;
+}
+
+h1 {
+    cursor: pointer;
+    margin-bottom:30px;
+}
+
+nav {
+    display: inline-block;
+    float:none;
+    vertical-align:top;
+}
+
+#app_container {
+    height: 100%;
+    width:80%;
+    text-align:center;
+    background-color:rgba(255, 255, 255, .98);
+}
+
+#content {
+    display: inline-block;
+    width: 65%;
+}
+
+.centeredSlider {
+    margin-top:10px;
+}
+
+footer {
+    position: fixed;
+    height: 50px;
+    bottom: 0;
+    width: 88%;
+    font-weight: bold;
+    text-align:right;
+}
+
+output {
+    display:inline;
+    color: red;
+}
+
+#tableView {
+    width: 95%;
+}
+
+#tableView td, #tableView th {
+    text-align:left;
+}
+
+canvas {
+    width:380px;
+    height:300px;
+    border: 1px solid #222;
+}
