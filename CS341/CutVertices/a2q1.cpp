@@ -27,8 +27,6 @@ struct Graph {
     unordered_set<int> cut_vertices;
     vector<pair<int, int> > cut_edges;
 
-    //unordered_set<pair<int, int> > cut_edges;
-
     Graph(int n) : N(n), counter(0) {
         for(int i = 1; i <= N; ++i) {
             visited[i] = false;
@@ -87,27 +85,6 @@ struct Graph {
             last = p;
         }
         cout << endl;
-
-        /*
-
-        for(int i = 1; i < N; ++i) {
-            cout << i << " : " << low[i] << " : " << num[i] << endl;
-
-        }
-         */
-
-        /*
-        sort(cut_vertices.begin(), cut_vertices.end());
-        sort(cut_edges.begin(), cut_edges.end(), sortFn);
-
-        cout << cut_vertices.size();
-        for(auto i : cut_vertices) cout << " "<< i;
-        cout << endl;
-
-        cout << cut_edges.size();
-        for(auto p : cut_edges) cout << " " << "(" << p.first << "," << p.second << ")";
-        cout << endl;
-         */
     }
 };
 
