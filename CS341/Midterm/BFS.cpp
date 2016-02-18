@@ -20,10 +20,12 @@ vector<int> BFS::path(int s, int t) {
     distance[s] = 0;
     Q.push(s);
 
-    while(!Q.empty() && Q.front() != t) {
+    while(!Q.empty()) {
         int current = Q.front();
         res.push_back(current);
         Q.pop();
+
+        if(current == t) break;
 
         for(auto n : graph[current]) {
             if(distance[n] == MAX) {
