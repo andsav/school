@@ -1,7 +1,3 @@
-//
-// Created by Andrei on 16-02-10.
-//
-
 #include "inc.h"
 
 adj adj_from_input() {

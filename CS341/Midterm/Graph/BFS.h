@@ -1,7 +1,3 @@
-//
-// Created by Andrei on 16-02-10.
-//
-
 #ifndef MIDTERM_BFS_H
 #define MIDTERM_BFS_H
 

@@ -1,7 +1,3 @@
-//
-// Created by Andrei on 16-02-10.
-//
-
 #include "BFS.h"
 
 BFS::BFS(adj &g) : graph(g) { }

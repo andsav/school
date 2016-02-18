@@ -1,7 +1,3 @@
-//
-// Created by Andrei on 16-02-10.
-//
-
 #include "Dijkstra.h"
 
 Dijkstra::Dijkstra(adj_weighted &g) : graph(g) { }
