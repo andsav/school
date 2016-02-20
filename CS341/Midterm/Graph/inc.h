@@ -15,7 +15,6 @@ using namespace std;
 
 typedef unordered_map<int, int> dict;
 typedef unordered_map<int, vector<int> > adj;
-typedef unordered_map<int, dict> adj_weighted;
 
 adj adj_from_input();
 
