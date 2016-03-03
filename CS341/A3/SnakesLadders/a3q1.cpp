@@ -1,14 +1,13 @@
 #include <iostream>
 #include <vector>
 #include <climits>
-#include <unordered_map>
 
 #define INF INT_MAX
 
 using namespace std;
 
 struct Grid {
-    int n;
+    int n, N;
 
     vector<int> jump; // Snakes and ladders
 
@@ -17,9 +16,11 @@ struct Grid {
 
         cin >> n >> s >> l;
 
+        N = n*n;
+
         // initialize jump array
         jump.push_back(0); // box 0
-        for(int i=1; i <= n*n; ++i)
+        for(int i=1; i <= N; ++i)
             jump.push_back(i);
 
         for(int i=0; i < s+l; ++i) {
@@ -35,31 +36,23 @@ struct Grid {
 
 struct Solver {
     Grid& G;
-    int last;
+    Solver(Grid &g) : G(g) { }
 
-    unordered_map<int, int> steps_from;
-    unordered_map<int, bool> reaching_from;
+    void run() {
+        int last = G.N;
 
-    Solver(Grid &g) : G(g) {
-        last = G.n * G.n;
-        for(int i = 1; i < last; ++i) {
-            steps_from[i] = INF;
-            reaching_from[i] = false;
-        }
-        reaching_from[last] = true;
+        vector<int> steps_from(G.N+1, INF);
+        vector<bool> reaching_from(G.N+1, false);
+
+        steps_from[0] = 0;
         steps_from[last] = 0;
-    }
+        reaching_from[last] = true;
 
-    Solver* run() {
         for(int i = last-1; i > 0; --i) {
             int box = G[i];
             int step_max = 0;
             for(int b = box+1; b <= box+6; ++b) {
                 int current = G[b];
-
-                if(reaching_from[current])
-                    reaching_from[box] = true;
-
                 if(current >= last) {
                     step_max = max(step_max, 1);
                 }
@@ -68,15 +61,19 @@ struct Solver {
                 }
                 else {
                     step_max = INF;
+                    break;
+                }
+            }
+            for(int b = box+1; b <= box+6; ++b) {
+                int current = G[b];
+                if(reaching_from[current]) {
+                    reaching_from[box] = true;
+                    break;
                 }
             }
             steps_from[box] = step_max;
         }
 
-        return this;
-    }
-
-    void out() {
         if(!reaching_from[1])
             cout << "impossible" << endl;
         else if(steps_from[1] == INF)
@@ -90,5 +87,5 @@ int main() {
     Grid G;
     Solver S(G);
 
-    S.run()->out();
+    S.run();
 }
