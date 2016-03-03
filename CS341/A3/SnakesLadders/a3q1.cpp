@@ -35,19 +35,18 @@ struct Grid {
 
 struct Solver {
     Grid& G;
-    bool possible;
     int last;
 
     unordered_map<int, int> steps_from;
-    unordered_map<int, bool> reachable;
+    unordered_map<int, bool> reaching_from;
 
-    Solver(Grid &g) : G(g), possible(true) {
+    Solver(Grid &g) : G(g) {
         last = G.n * G.n;
         for(int i = 1; i < last; ++i) {
             steps_from[i] = INF;
-            reachable[i] = false;
+            reaching_from[i] = false;
         }
-        reachable[last] = false;
+        reaching_from[last] = true;
         steps_from[last] = 0;
     }
 
@@ -57,15 +56,18 @@ struct Solver {
             int step_max = 0;
             for(int b = box+1; b <= box+6; ++b) {
                 int current = G[b];
+
+                if(reaching_from[current])
+                    reaching_from[box] = true;
+
                 if(current >= last) {
                     step_max = max(step_max, 1);
                 }
-                if(steps_from[current] != INF) {
+                else if(steps_from[current] != INF) {
                     step_max = max(step_max, steps_from[current]+1);
                 }
                 else {
                     step_max = INF;
-                    break;
                 }
             }
             steps_from[box] = step_max;
@@ -75,7 +77,7 @@ struct Solver {
     }
 
     void out() {
-        if(!possible)
+        if(!reaching_from[1])
             cout << "impossible" << endl;
         else if(steps_from[1] == INF)
             cout << "infinity" << endl;
