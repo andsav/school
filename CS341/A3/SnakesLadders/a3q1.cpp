@@ -53,6 +53,7 @@ struct Solver {
             int step_max = 0;
             for(int b = box+1; b <= box+6; ++b) {
                 int current = G[b];
+
                 if(current >= last) {
                     step_max = max(step_max, 1);
                 }
