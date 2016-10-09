@@ -1,0 +1,5 @@
+catch exec
+run
+symbol-file /usr/local/bin/submit
+break main
+cont

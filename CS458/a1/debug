@@ -1,0 +1,6 @@
+catch exec
+run
+symbol-file /usr/local/bin/submit
+break check_forbidden
+cont
+info frame
