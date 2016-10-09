@@ -1,0 +1,16 @@
+How to run
+-----------
+
+`./server.sh <req_code>`
+
+`./client.sh <server_hostname> <n_port> <req_code> <message>`
+
+Tested on machines
+-------------------
+
+* ubuntu1404-004
+* ubuntu1404-006
+
+It should work whether client and server are on the same machines or on different machines (as long as it is the same network)
+
+
