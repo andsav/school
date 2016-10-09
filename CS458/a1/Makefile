@@ -14,4 +14,4 @@ send:
 	scp * a3savin@ugster21.student.cs.uwaterloo.ca:~/uml/share/
 
 submit:
-	scp sploit*.c a3savin@linux.student.cs.uwaterloo.ca:/u4/a3savin/cs458/a1a3savin@ugster21:~/uml/share
+	scp sploit*.c *.pdf a3savin@linux.student.cs.uwaterloo.ca:/u4/a3savin/cs458/
