@@ -10,7 +10,7 @@ public class sender {
 
     // Constants
     private final int MAX_READ_SIZE = 500;
-    private final int WINDOW_SIZE = 5;
+    private final int WINDOW_SIZE = 10;
 
     // Attributes
     private static String nEmulatorAddress;
@@ -23,6 +23,8 @@ public class sender {
     private static PrintWriter seqnumWriter;
     private static PrintWriter ackWriter;
 
+    private static ArrayList<byte[]> chunks = new ArrayList<byte[]>();
+
     /**
      * Point of entry
      *
@@ -33,6 +35,9 @@ public class sender {
         try {
             parseArgs(args);
             init();
+            chunkFile();
+
+
         } catch(Exception e) {
             System.err.println(e);
             System.exit(1);
@@ -77,4 +82,10 @@ public class sender {
         seqnumWriter = new PrintWriter("segnum.log", "UTF-8");
         ackWriter = new PrintWriter("ack.log", "UTF-8");
     }
+
+    public static void chunkFile() {
+
+        
+    }
+
 }
