@@ -3,7 +3,7 @@
 POST_URL="${1}/post.php"
 HIDDEN_FILE="${1}/docs/file"
 
-curl -s ${HIDDEN_FILE} | base64 -D > decoded_file
+curl -s ${HIDDEN_FILE} | base64 -d > decoded_file
 echo "" >> decoded_file
 
 while read line; do
