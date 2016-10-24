@@ -12,7 +12,7 @@ while read line; do
     username="${credentials[0]}"
     password="${credentials[1]}"
    
-    echo "Attempting to log in as $username:$password..."
+    echo "Attempting to log in as $username:$password"
     echo "form=login&submit=Login&username=${username}&password=${password}" | curl -d @- -c cookies ${POST_URL}
     curl -L -b cookies -s ${1} | awk '/Welcome, ([a-z]+)!/ { print $1 " " $2 }' 
 
