@@ -1,1 +1,4 @@
 *.class
+test.txt
+ack.log
+segnum.log
