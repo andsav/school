@@ -7,7 +7,9 @@ for D in *; do
     if [ -d "${D}" ] && [ "${D}" != "submit" ]; then
         echo "Sploit ${D}:"
         cd ${D}
+        mv sploit.sh sploit${D}.sh
         tar cvf ../submit/sploit${D}.tar *
+        mv sploit${D}.sh sploit.sh
         cd ../ 
         echo "\n"
     fi
