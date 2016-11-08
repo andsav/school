@@ -9,7 +9,7 @@ object Sender extends App {
   
   // Helpers
   def getFileContents(fileName: String): String =
-  Source.fromFile(fileName).getLines.mkString
+    Source.fromFile(fileName).getLines.mkString("\n")
 
   def buildPackets(content: String, packetSize: Int): Array[packet] = {
     content.grouped(packetSize).toArray.zipWithIndex.map {
@@ -35,8 +35,9 @@ object Sender extends App {
   val packetsToSend = buildPackets(fileContents, MAX_READ_SIZE)
   val socket = new DatagramSocket(senderPort)
 
-  var base = 0
-  var nextSeqNum = 0
+  var currentMod:Int = -1
+  var base:Int = 0
+  var nextSeqNum:Int = 0
   var end = false
 
   // Main program
@@ -57,9 +58,16 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
     try {
       log.print("")
 
+      println(packets.length + " packets to send")
+
       while(!Sender.end) {
-        if(Sender.nextSeqNum < Sender.base + Sender.WINDOW_SIZE) {
-          udtSend(Sender.nextSeqNum)
+        println("nextSeqNum: " + Sender.nextSeqNum + ", base: " + Sender.base)
+
+        if(Sender.nextSeqNum >= packets.length-1) {
+          sendEOT()
+        }
+        else if(Sender.nextSeqNum < Sender.base + Sender.WINDOW_SIZE) {
+          sendPacket(Sender.nextSeqNum)
 
           if(Sender.base == Sender.nextSeqNum)
             timer.restart()
@@ -67,6 +75,9 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
           Sender.nextSeqNum += 1
         }
       }
+
+      timer.stop()
+
     } catch {
       case e: Exception => println("Packet sender aborted: " + e.toString)
       Sender.end = true
@@ -75,14 +86,21 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
     }
   }
 
-  def udtSend(i: Int): Unit = {
-    val bytes = packets(i).getUDPdata
+  def udtSend(p: packet): Unit = {
+    val bytes = p.getUDPdata
     val udpPacket = new DatagramPacket(bytes, bytes.length, Sender.nEmulatorAddress, Sender.nEmulatorPort)
-
     Sender.socket.send(udpPacket)
+  }
 
+  def sendPacket(i: Int): Unit = {
+    udtSend(packets(i))
     println("SENT packet " + i)
-    log.println(packets(i).getSeqNum)
+    log.println(i%32)
+  }
+
+  def sendEOT() : Unit = {
+    udtSend(packet.createEOT(0))
+    println("SENT EOT")
   }
 
   def timeout(): Unit = {
@@ -90,13 +108,11 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
 
     println("TIMEOUT! resending packets " + Sender.base + " to " + (Sender.nextSeqNum-1).toString)
 
-    (Sender.base until Sender.nextSeqNum).foreach(udtSend)
+    (Sender.base until Sender.nextSeqNum).foreach(sendPacket)
   }
 }
 
 class AckReceiver(log: PrintWriter) extends Runnable {
-  var end = false
-
   def run(): Unit = {
     try {
       log.print("")
@@ -111,14 +127,16 @@ class AckReceiver(log: PrintWriter) extends Runnable {
           case 0 => {
             println("RECEIVED ACK " + p.getSeqNum())
 
-            if(p.getSeqNum() >= Sender.base)
-              Sender.base = p.getSeqNum() + 1
+            if(p.getSeqNum%32 == 0)
+              Sender.currentMod += 1
 
-            log.println(p.getSeqNum())
+            if(p.getSeqNum%32 + Sender.currentMod*32 >= Sender.base)
+              Sender.base = p.getSeqNum%32 + Sender.currentMod*32 + 1
+
+            log.println(p.getSeqNum()%32)
           }
           case 2 => {
             println("RECEIVED EOT")
-
             Sender.end = true
           }
           case x => {

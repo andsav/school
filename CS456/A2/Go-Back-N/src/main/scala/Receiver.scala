@@ -6,25 +6,32 @@ object Receiver extends App {
 
   // Helpers
   def deliver(p: packet): Unit = {
+    file.append(new String(p.getData))
     println("DELIVERED packet " + p.getSeqNum)
-    file.append(p.getData.toString)
   }
 
-  def sendAck(i: Int): Unit = {
-    val bytes = packet.createACK(i).getUDPdata
-    val udpPacket = new DatagramPacket(bytes, bytes.length, nEmulatorAddress, ackPort)
-
+  def udtSend(p: packet): Unit = {
+    val bytes = p.getUDPdata
+    val udpPacket = new DatagramPacket(bytes, bytes.length, nEmulatorAddress, nEmulatorPort)
     socket.send(udpPacket)
+  }
 
-    println("SENT ACK " + i)
-    log.println(i)
+  def sendAck(): Unit = {
+    udtSend(packet.createACK(expectedSeq))
+    println("SENT ACK " + expectedSeq)
+    log.println(expectedSeq%32)
+  }
+
+  def sendEOT(): Unit = {
+    udtSend(packet.createEOT(0))
+    println("SENT EOT")
   }
 
   // Initialization
   val log = new PrintWriter(new File("arrival.log"))
 
   val nEmulatorAddress = InetAddress.getByName(args(0))
-  val ackPort = Integer.parseInt(args(1))
+  val nEmulatorPort = Integer.parseInt(args(1))
   val receiverPort = Integer.parseInt(args(2))
   val fileName = args(3)
 
@@ -33,29 +40,45 @@ object Receiver extends App {
 
   val socket = new DatagramSocket(receiverPort)
 
-  var expectedSeq = -1
+  var expectedSeq:Int = -1
   var end = false
-
-  var udpPacket = new DatagramPacket(new Array[Byte](Sender.MAX_READ_SIZE), Sender.MAX_READ_SIZE)
 
   // Main program
   try {
+    var udpPacket = new DatagramPacket(new Array[Byte](9999), 9999)
+
     while(!end) {
       socket.receive(udpPacket)
       val p = packet.parseUDPdata(udpPacket.getData())
 
-      if(p.getSeqNum == expectedSeq) {
-        println("RECEIVED packet " + p.getSeqNum)
-        deliver(p)
-        expectedSeq += 1
-      } else {
-        println("RECEIVED out-of-order packet " + p.getSeqNum)
-      }
+      p.getType() match {
+        case 1 => {
+          if(p.getSeqNum == (expectedSeq+1)%32) {
+            println("RECEIVED packet " + expectedSeq+1)
+            deliver(p)
+            expectedSeq += 1
+          } else {
+            println("RECEIVED out-of-order packet " + expectedSeq+1)
+          }
 
-      sendAck(expectedSeq)
+          sendAck()
+        }
+        case 2 => {
+          println("RECEIVED EOT")
+
+          sendEOT()
+          end = true
+        }
+        case x => {
+          println("RECEIVED invalid packet of type " + x)
+        }
+      }
     }
   } catch {
-    case e: Exception => println(e.toString)
+    case e: Exception => {
+      println(e.toString)
+      throw e
+    }
   } finally {
     log.close()
     file.close()
