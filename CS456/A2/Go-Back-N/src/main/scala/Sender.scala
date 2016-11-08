@@ -57,6 +57,7 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
       }
     } catch {
       case e: Exception => println("Packet sender aborted: " + e.toString)
+      Sender.end = true
     } finally {
       log.close()
     }
@@ -68,11 +69,15 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
 
     Sender.socket.send(packet)
 
+    println("SENT packet " + i)
     log.println(packets(i).getSeqNum)
   }
 
   def timeout(): Unit = {
     timer.start()
+
+    println("TIMEOUT! resending packets " + Sender.base + " to " + (Sender.nextSeqNum-1).toString)
+
     (Sender.base until Sender.nextSeqNum).foreach(udtSend)
   }
 }
@@ -84,7 +89,7 @@ class AckReceiver(log: PrintWriter) extends Runnable {
     try {
       log.print("")
 
-      var udpPacket:DatagramPacket = null
+      var udpPacket = new DatagramPacket(new Array[Byte](Sender.MAX_READ_SIZE), Sender.MAX_READ_SIZE)
 
       while(!Sender.end) {
         Sender.socket.receive(udpPacket)
@@ -92,24 +97,27 @@ class AckReceiver(log: PrintWriter) extends Runnable {
 
         p.getType() match {
           case 0 => {
+            println("RECEIVED ACK " + p.getSeqNum())
+
             if(p.getSeqNum() >= Sender.base)
               Sender.base = p.getSeqNum() + 1
 
             log.println(p.getSeqNum())
           }
           case 2 => {
+            println("RECEIVED EOT")
+
             Sender.end = true
           }
-          case _ => {
-            throw new Exception("Invalid packet of type")
+          case x => {
+            println("RECEIVED invalid packet of type " + x)
           }
         }
-
-        Sender.end = true
       }
 
     } catch {
       case e: Exception => println("Ack receiver aborted: " + e.toString)
+      Sender.end = true
     } finally {
       log.close()
     }
