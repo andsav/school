@@ -46,8 +46,6 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
       log.print("")
 
       while(!Sender.end) {
-        println("here2")
-
         if(Sender.nextSeqNum < Sender.base + Sender.WINDOW_SIZE) {
           udtSend(Sender.nextSeqNum)
 
@@ -55,7 +53,6 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
             timer.restart()
 
           Sender.nextSeqNum += 1
-          println("here3")
         }
       }
     } catch {
@@ -87,8 +84,27 @@ class AckReceiver(log: PrintWriter) extends Runnable {
     try {
       log.print("")
 
+      var udpPacket:DatagramPacket = null
+
       while(!Sender.end) {
-        println("here")
+        Sender.socket.receive(udpPacket)
+        val p = packet.parseUDPdata(udpPacket.getData())
+
+        p.getType() match {
+          case 0 => {
+            if(p.getSeqNum() >= Sender.base)
+              Sender.base = p.getSeqNum() + 1
+
+            log.println(p.getSeqNum())
+          }
+          case 2 => {
+            Sender.end = true
+          }
+          case _ => {
+            throw new Exception("Invalid packet of type")
+          }
+        }
+
         Sender.end = true
       }
 
