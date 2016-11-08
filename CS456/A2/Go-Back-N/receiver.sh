@@ -1,3 +1,3 @@
-#!/bin/bash
+#/bin/bash
 
-sbt runMain Receiver
+sbt "runMain Receiver $*"

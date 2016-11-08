@@ -1,12 +1,21 @@
 import java.net.{InetAddress, DatagramPacket, DatagramSocket}
 import java.io.{File, PrintWriter}
-import java.util.concurrent.{TimeUnit, TimeoutException, Future}
 import javax.swing.{Timer, AbstractAction}
 import java.awt.event.ActionEvent
 import scala.io.Source
 
 object Sender extends App {
   require(args.length == 4)
+  
+  // Helpers
+  def getFileContents(fileName: String): String =
+  Source.fromFile(fileName).getLines.mkString
+
+  def buildPackets(content: String, packetSize: Int): Array[packet] = {
+    content.grouped(packetSize).toArray.zipWithIndex.map {
+      case (chunk, i) => packet.createPacket(i, chunk)
+    }
+  }
 
   // Constants
   val MAX_READ_SIZE = 500
@@ -22,8 +31,8 @@ object Sender extends App {
   val senderPort = Integer.parseInt(args(2))
   val fileName = args(3)
 
-  val fileContents = Helper.getFileContents(fileName)
-  val packetsToSend = Helper.buildPackets(fileContents, MAX_READ_SIZE)
+  val fileContents = getFileContents(fileName)
+  val packetsToSend = buildPackets(fileContents, MAX_READ_SIZE)
   val socket = new DatagramSocket(senderPort)
 
   var base = 0
@@ -31,8 +40,11 @@ object Sender extends App {
   var end = false
 
   // Main program
-  new Thread(new PacketSender(seqNumFile, packetsToSend)).start()
-  new Thread(new AckReceiver(ackFile)).start()
+  val packetSenderThread = new Thread(new PacketSender(seqNumFile, packetsToSend))
+  val ackReceiverThread = new Thread(new AckReceiver(ackFile))
+
+  packetSenderThread.start()
+  ackReceiverThread.start()
 }
 
 class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
@@ -65,9 +77,9 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
 
   def udtSend(i: Int): Unit = {
     val bytes = packets(i).getUDPdata
-    val packet = new DatagramPacket(bytes, bytes.length, Sender.nEmulatorAddress, Sender.nEmulatorPort)
+    val udpPacket = new DatagramPacket(bytes, bytes.length, Sender.nEmulatorAddress, Sender.nEmulatorPort)
 
-    Sender.socket.send(packet)
+    Sender.socket.send(udpPacket)
 
     println("SENT packet " + i)
     log.println(packets(i).getSeqNum)
@@ -120,17 +132,6 @@ class AckReceiver(log: PrintWriter) extends Runnable {
       Sender.end = true
     } finally {
       log.close()
-    }
-  }
-}
-
-object Helper {
-  def getFileContents(fileName: String): String =
-    Source.fromFile(fileName).getLines.mkString
-
-  def buildPackets(content: String, packetSize: Int): Array[packet] = {
-    content.grouped(packetSize).toArray.zipWithIndex.map {
-      case (chunk, i) => packet.createPacket(i, chunk)
     }
   }
 }
