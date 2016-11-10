@@ -1,7 +1,8 @@
 object Constants {
   val MAX_READ_SIZE = 500
   val WINDOW_SIZE = 10
-  val TIMEOUT_DELAY = 100
+  val TIMEOUT_DELAY = 150
+  val PACKAGE_SEND_DELAY = 7
 
   val PACKET_TYPE_ACK = 0
   val PACKET_TYPE_PACKET = 1

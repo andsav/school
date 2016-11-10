@@ -28,11 +28,11 @@ object Receiver extends App {
 
           if(p.getSeqNum == (expectedSeq+1)%32) {
 
-            println("RECEIVED packet " + (expectedSeq+1)%32)
+            println("RECEIVED packet " + p.getSeqNum)
             deliver(p)
             expectedSeq += 1
           }
-          else println("RECEIVED out-of-order packet " + (expectedSeq+1)%32)
+          else println("RECEIVED out-of-order packet " + p.getSeqNum)
 
           sendAck()
         }
@@ -47,17 +47,22 @@ object Receiver extends App {
         case x => println("RECEIVED invalid packet of type " + x)
       }
     }
-  } catch {
+  }
+  catch {
     case e: Exception => println("Receiver aborted: " + e.toString)
-  } finally {
+  }
+  finally {
+    file.append("\n")
     log.close()
     file.close()
   }
 
   // Helpers
   def deliver(p: packet): Unit = {
+    println(new String(p.getData))
     file.append(new String(p.getData))
     println("DELIVERED packet " + p.getSeqNum)
+    Helpers.writeLog(log, p.getSeqNum)
   }
 
   def udtSend(p: packet): Unit = {
@@ -67,7 +72,6 @@ object Receiver extends App {
   def sendAck(): Unit = {
     udtSend(packet.createACK(expectedSeq))
     println("SENT ACK " + expectedSeq)
-    Helpers.writeLog(log, expectedSeq)
   }
 
   def sendEOT(): Unit = {

@@ -10,20 +10,17 @@ object Helpers {
     args(3)
   )
 
-  def udpPacket(bytes: Array[Byte], dest: InetAddress, port: Int): DatagramPacket = {
+  def udpPacket(bytes: Array[Byte], dest: InetAddress, port: Int): DatagramPacket =
     new DatagramPacket(bytes, bytes.length, dest, port)
-  }
 
-  def udtSend(p: packet, socket: DatagramSocket, dest: InetAddress, port: Int): Unit = {
-    socket.send(
-      udpPacket(p.getUDPdata, dest, port)
-    )
-  }
+  def udtSend(p: packet, socket: DatagramSocket, dest: InetAddress, port: Int): Unit =
+    socket.send(udpPacket(p.getUDPdata, dest, port))
 
-  def emptyUdpPacket(): DatagramPacket = new DatagramPacket(new Array[Byte](9999), 9999)
+  def emptyUdpPacket(): DatagramPacket =
+    new DatagramPacket(new Array[Byte](9999), 9999)
 
   def getFileContents(fileName: String): String =
-    Source.fromFile(fileName).getLines.mkString("\n")
+    Source.fromFile(fileName, "utf-8").getLines.mkString("\n")
 
   def buildPackets(content: String, packetSize: Int): Array[packet] = {
     content.grouped(packetSize).toArray.zipWithIndex.map {
@@ -32,9 +29,7 @@ object Helpers {
   }
 
   def writeLog(log: PrintWriter, n: Int): Unit = {
-    try {
-      log.println((n%32))
-    }
+    try log.println((n%32))
     catch {
       case e: Exception => {
         println("writeLog() aborted: " + e.toString)

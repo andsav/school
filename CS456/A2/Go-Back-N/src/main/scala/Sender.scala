@@ -17,9 +17,9 @@ object Sender extends App {
   val packetsToSend = Helpers.buildPackets(fileContents, Constants.MAX_READ_SIZE)
   val socket = new DatagramSocket(senderPort)
 
-  var currentMod = -1
-  var base = 0
+  var window = 0 until Constants.WINDOW_SIZE
   var nextSeqNum = 0
+
   var end = false
 
   // Main program
@@ -44,39 +44,48 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
       println(packets.length + " packets to send")
 
       while(!Sender.end) {
-        if(Sender.nextSeqNum < Sender.base + Constants.WINDOW_SIZE) {
+        if(Sender.window contains Sender.nextSeqNum) {
           sendPacket(Sender.nextSeqNum)
 
-          if(Sender.base == Sender.nextSeqNum)
+          if(Sender.nextSeqNum == Sender.window.head)
             timer.restart()
 
           Sender.nextSeqNum += 1
         }
+        Thread sleep(Constants.PACKAGE_SEND_DELAY)
       }
 
       timer.stop()
 
-    } catch {
+    }
+    catch {
       case e: Exception => {
         println("Packet sender aborted: " + e.toString)
-        Sender.end = true
       }
-    } finally {
+    }
+    finally {
       log.close()
+      Sender.end = true
+      println("Packet sender thread finished")
     }
   }
 
   def udtSend(p: packet): Unit = {
-    Helpers.udtSend(p, Sender.socket, Sender.nEmulatorAddress, Sender.nEmulatorPort)
+    Helpers.udtSend(
+      p,
+      Sender.socket,
+      Sender.nEmulatorAddress,
+      Sender.nEmulatorPort)
   }
 
   def sendPacket(i: Int): Unit = {
     if(i < packets.length) {
       udtSend(packets(i))
       println("SENT packet " + i)
+      println(new String(packets(i).getData))
       Helpers.writeLog(log, i)
+      Thread sleep(Constants.PACKAGE_SEND_DELAY)
     }
-    else sendEOT()
   }
 
   def sendEOT() : Unit = {
@@ -85,25 +94,22 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
   }
 
   def timeout(): Unit = {
-    if(Sender.base == Sender.nextSeqNum) {
-      timer.stop()
+    if(!Sender.end) {
+      //timer.restart()
+
+      if(Sender.window.head >= packets.length)
+        sendEOT()
+      else {
+        println("TIMEOUT! resending packets " + Sender.window.mkString(", "))
+        Sender.window.foreach(sendPacket)
+      }
     }
-    else {
-      timer.start()
-
-      println("TIMEOUT! resending packets " + Sender.base + " to " + (Sender.nextSeqNum-1).toString)
-
-      (Sender.base until Sender.nextSeqNum).foreach(sendPacket)
-    }
-
   }
 }
 
 class AckReceiver(log: PrintWriter) extends Runnable {
   def run(): Unit = {
     try {
-      log.print("")
-
       var udpPacket = Helpers.emptyUdpPacket()
 
       while(!Sender.end) {
@@ -112,15 +118,18 @@ class AckReceiver(log: PrintWriter) extends Runnable {
 
         p.getType() match {
           case Constants.PACKET_TYPE_ACK => {
-            if(p.getSeqNum%32 == 0)
-              Sender.currentMod += 1
 
-            val realSeqNum = Sender.currentMod*32 + p.getSeqNum
+            // Ack within window
+            if(Sender.window.map(x => x%32) contains p.getSeqNum) {
+              val base = (Sender.window.head/32) * 32 + p.getSeqNum + 1
+              Sender.window = base until (base + Constants.WINDOW_SIZE)
 
-            println("RECEIVED ACK " + realSeqNum)
-
-            if(realSeqNum >= Sender.base)
-              Sender.base = realSeqNum + 1
+              println("RECEIVED ACK " + (base-1).toString)
+              println("Window base is now " + base)
+            }
+            else {
+              println("RECEIVED dup ACK" + p.getSeqNum)
+            }
 
             Helpers.writeLog(log, p.getSeqNum)
           }
@@ -134,13 +143,16 @@ class AckReceiver(log: PrintWriter) extends Runnable {
         }
       }
 
-    } catch {
+    }
+    catch {
       case e: Exception => {
         println("Ack receiver aborted: " + e.toString)
-        Sender.end = true
       }
-    } finally {
+    }
+    finally {
       log.close()
+      Sender.end = true
+      println("Ack receiver thread finished")
     }
   }
 }
