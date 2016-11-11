@@ -41,22 +41,23 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
 
   def run(): Unit = {
     try {
-      println(packets.length + " packets to send")
-
+      // Attempt to send packets until EOT received
       while(!Sender.end) {
+        // Only send if the next packet falls within the window
         if(Sender.window contains Sender.nextSeqNum) {
           sendPacket(Sender.nextSeqNum)
 
+          // (Re)start the timer if window has slidden
           if(Sender.nextSeqNum == Sender.window.head)
             timer.restart()
 
           Sender.nextSeqNum += 1
         }
+
         Thread sleep(Constants.PACKAGE_SEND_DELAY)
       }
 
       timer.stop()
-
     }
     catch {
       case e: Exception => {
@@ -66,7 +67,6 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
     finally {
       log.close()
       Sender.end = true
-      println("Packet sender thread finished")
     }
   }
 
@@ -81,28 +81,21 @@ class PacketSender(log: PrintWriter, packets: Array[packet]) extends Runnable {
   def sendPacket(i: Int): Unit = {
     if(i < packets.length) {
       udtSend(packets(i))
-      println("SENT packet " + i)
-      println(new String(packets(i).getData))
       Helpers.writeLog(log, i)
       Thread sleep(Constants.PACKAGE_SEND_DELAY)
     }
   }
 
-  def sendEOT() : Unit = {
+  def sendEOT() : Unit =
     udtSend(packet.createEOT(0))
-    println("SENT EOT")
-  }
 
+  // This is called when timeout event occurs
   def timeout(): Unit = {
     if(!Sender.end) {
-      //timer.restart()
-
       if(Sender.window.head >= packets.length)
         sendEOT()
-      else {
-        println("TIMEOUT! resending packets " + Sender.window.mkString(", "))
-        Sender.window.foreach(sendPacket)
-      }
+      else
+        (Sender.window.head until Sender.nextSeqNum).foreach(sendPacket) // Re-send every un-acked packet
     }
   }
 }
@@ -123,21 +116,12 @@ class AckReceiver(log: PrintWriter) extends Runnable {
             if(Sender.window.map(x => x%32) contains p.getSeqNum) {
               val base = (Sender.window.head/32) * 32 + p.getSeqNum + 1
               Sender.window = base until (base + Constants.WINDOW_SIZE)
-
-              println("RECEIVED ACK " + (base-1).toString)
-              println("Window base is now " + base)
-            }
-            else {
-              println("RECEIVED dup ACK" + p.getSeqNum)
             }
 
             Helpers.writeLog(log, p.getSeqNum)
           }
 
-          case Constants.PACKET_TYPE_EOT => {
-            println("RECEIVED EOT")
-            Sender.end = true
-          }
+          case Constants.PACKET_TYPE_EOT => Sender.end = true
 
           case x => println("RECEIVED invalid packet of type " + x)
         }
@@ -152,7 +136,6 @@ class AckReceiver(log: PrintWriter) extends Runnable {
     finally {
       log.close()
       Sender.end = true
-      println("Ack receiver thread finished")
     }
   }
 }

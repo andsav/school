@@ -19,27 +19,25 @@ object Receiver extends App {
   try {
     var udpPacket = Helpers.emptyUdpPacket()
 
+    // Read packets until EOT received
     while(!end) {
       socket.receive(udpPacket)
       val p = packet.parseUDPdata(udpPacket.getData())
 
       p.getType() match {
         case Constants.PACKET_TYPE_PACKET => {
+          Helpers.writeLog(log, p.getSeqNum+1)
 
+          // The sequence number is the expected one
           if(p.getSeqNum == (expectedSeq+1)%32) {
-
-            println("RECEIVED packet " + p.getSeqNum)
             deliver(p)
             expectedSeq += 1
           }
-          else println("RECEIVED out-of-order packet " + p.getSeqNum)
 
           sendAck()
         }
 
         case Constants.PACKET_TYPE_EOT  => {
-          println("RECEIVED EOT")
-
           sendEOT()
           end = true
         }
@@ -58,24 +56,15 @@ object Receiver extends App {
   }
 
   // Helpers
-  def deliver(p: packet): Unit = {
-    println(new String(p.getData))
-    file.append(new String(p.getData))
-    println("DELIVERED packet " + p.getSeqNum)
-    Helpers.writeLog(log, p.getSeqNum)
-  }
+  def deliver(p: packet): Unit =
+    file.append( new String(p.getData).replaceAll("\\#+$", "") )
 
-  def udtSend(p: packet): Unit = {
+  def udtSend(p: packet): Unit =
     Helpers.udtSend(p, socket, nEmulatorAddress, nEmulatorPort)
-  }
 
-  def sendAck(): Unit = {
+  def sendAck(): Unit =
     udtSend(packet.createACK(expectedSeq))
-    println("SENT ACK " + expectedSeq)
-  }
 
-  def sendEOT(): Unit = {
+  def sendEOT(): Unit =
     udtSend(packet.createEOT(0))
-    println("SENT EOT")
-  }
 }

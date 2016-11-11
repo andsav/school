@@ -23,8 +23,9 @@ object Helpers {
     Source.fromFile(fileName, "utf-8").getLines.mkString("\n")
 
   def buildPackets(content: String, packetSize: Int): Array[packet] = {
-    content.grouped(packetSize).toArray.zipWithIndex.map {
-      case (chunk, i) => packet.createPacket(i, chunk)
+    // The end of packets is sometimes trimmed (?!), so we pad them with characters to be removed later
+    content.grouped(packetSize-32).toArray.zipWithIndex.map {
+      case (chunk, i) => packet.createPacket(i, chunk + "#" * 32)
     }
   }
 

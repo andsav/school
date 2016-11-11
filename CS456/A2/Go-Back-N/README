@@ -1,0 +1,36 @@
+Compile
+----------
+Run `make` (it runs `sbt compile`)
+
+
+Usage
+-------
+First run the emulator:
+
+./nEmulator 9991 host2 9994 9993 host3 9992 1 0.2 0
+
+Then the receiver:
+
+./receiver.sh host1 9993 9994 <output file>
+
+Then the sender:
+
+./sender.sh host1 9991 9992 <input file>
+
+
+Source code
+------------
+
+Source code is in `/src/main/scala`.
+
+Compiling info
+----------------
+* This program was tested on `ubuntu1404-008`, `ubuntu1404-004` and `ubuntu1404-002`
+
+* make version: GNU Make 3.81
+
+* java version: 1.8.0_91
+
+* sbt version: 0.13.12
+
+* scala version: 2.10.6
