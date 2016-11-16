@@ -2,6 +2,7 @@
 #include "router.h"
 #include "Socket.h"
 #include "Packet.h"
+#include "LinkState.h"
 
 using namespace std;
 
@@ -37,16 +38,14 @@ int main(int argc, char **argv) {
             cerr << "Socket creation failed" << endl;
             throw exception();
         }
-        if(!socket.init()) {
+        if(!socket.init(router_port, nse_hostname, nse_port)) {
             cerr << "Socket init failed" << endl;
             throw exception();
         }
 
         cout << socket.fd << endl;
 
-        cout << router_id << router_port << nse_port << endl;
-        cout << nse_hostname << endl;
-
+        cout << router_id << endl;
 
         /*
          * Cleanup

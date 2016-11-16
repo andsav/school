@@ -6,14 +6,20 @@
 struct Packet
 {
     unsigned int router_id;
+
+    char const* encode() const;
+
+    static Packet* make(const char*);
 };
 
 struct PacketHello : public Packet
 {
+    unsigned int link_id;
 
+    char const* encode() const;
 };
 
-struct PacketLSPDU : public Packet
+struct PacketLS : public Packet
 {
 
 };
