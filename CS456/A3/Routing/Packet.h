@@ -3,13 +3,19 @@
 
 #define NBR_ROUTER 5
 
+#include <string>
+#include <memory>
+
+#include "State.h"
+
 struct Packet
 {
     unsigned int router_id;
 
     char const* encode() const;
 
-    static Packet* make(const char*);
+    static std::unique_ptr<Packet> make(std::string&);
+    void update_state(State&);
 };
 
 struct PacketHello : public Packet
@@ -29,6 +35,10 @@ struct PacketInit : public Packet
 
 };
 
+struct PacketError : public Packet
+{
+
+};
 
 
 #endif //ROUTING_PACKET_H

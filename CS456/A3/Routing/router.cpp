@@ -2,7 +2,7 @@
 #include "router.h"
 #include "Socket.h"
 #include "Packet.h"
-#include "LinkState.h"
+#include "State.h"
 
 using namespace std;
 
@@ -26,6 +26,9 @@ int main(int argc, char **argv) {
          * Initialization
          */
 
+        // State
+        State state(router_id);
+
         // File
         stringstream log_file_name;
         log_file_name << "router" << argv[1] << ".log";
@@ -43,9 +46,10 @@ int main(int argc, char **argv) {
             throw exception();
         }
 
-        cout << socket.fd << endl;
-
-        cout << router_id << endl;
+        /*
+         * Main program
+         */
+        
 
         /*
          * Cleanup
