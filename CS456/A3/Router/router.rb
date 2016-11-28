@@ -20,12 +20,17 @@ raise RuntimeError, 'Invalid router_port' if ROUTER_PORT == 0 or ROUTER_PORT > 0
 socket = UDPSocket.new
 socket.bind '', ROUTER_PORT
 
-log = open("router#{ROUTER_ID}.log", 'w')
+log_file = open("router#{ROUTER_ID}.log", 'w')
 
 #
 # Main program
 #
 load 'packet.rb'
 
-# 1 - Send init package
-udp_send(socket, PacketInit.new(ROUTER_ID))
+# 1 - Send INIT
+udp_send(socket, PacketInit.new(ROUTER_ID), log_file)
+
+# 2 - Send HELLO to neighbours
+
+
+# 3 -
