@@ -26,11 +26,25 @@ log_file = open("router#{ROUTER_ID}.log", 'w')
 # Main program
 #
 load 'packet.rb'
+load 'circuit.rb'
+load 'graph.rb'
 
 # 1 - Send INIT
 udp_send(socket, PacketInit.new(ROUTER_ID), log_file)
 
-# 2 - Send HELLO to neighbours
+
+# 2 - Receive circuit DB from nse
+rcd = socket.recv(64).unpack('L*')
+circuit_db = CircuitDB.new
+
+(0..rcd[0]-1).each do |i|
+  circuit_db[rcd[1+(i*2)]] = rcd[2+(i*2)]
+end
+
+log_file.write("\nR#{ROUTER_ID} receives circuit_db #{circuit_db}\n\n")
 
 
-# 3 -
+# 3 - Send HELLO to all neighbours
+circuit_db.keys.each do |link|
+  udp_send(socket, PacketHello.new(ROUTER_ID, link), log_file)
+end
