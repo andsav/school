@@ -5,7 +5,11 @@ module Log
     @log_file = open("router#{ROUTER_ID}.log", 'w')
   end
 
-  def write(action, argument)
+  def write(content)
+    @log_file.write("#{content}")
+  end
+
+  def write_action(action, argument)
     @log_file.write("R#{ROUTER_ID} #{action} #{argument}\n")
   end
 

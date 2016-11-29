@@ -1,8 +1,8 @@
 load 'log.rb'
 load 'udp_socket.rb'
 load 'packet.rb'
-load 'circuit.rb'
-load 'graph.rb'
+load 'circuit_db.rb'
+load 'topology.rb'
 
 #                   #
 # Parsing arguments #
@@ -25,7 +25,6 @@ raise RuntimeError, 'Invalid router_port' if ROUTER_PORT == 0 or ROUTER_PORT > 0
 
 Log.init
 UDP_Socket.init
-Graph.init
 Packet.init
 
 #              #
@@ -36,16 +35,9 @@ Packet.init
 PacketInit.new(ROUTER_ID).udp_send
 
 # 2 - Receive circuit DB from nse
-rcd = UDP_Socket.recv(64).unpack('L*')
-circuit_db = CircuitDB.new
-
-(0..rcd[0]-1).each do |i|
-  circuit_db[rcd[1+(i*2)]] = rcd[2+(i*2)]
-end
-
 Log.section
-Log.write('receives', circuit_db)
-
+circuit_db = CircuitDB.new
+Topology.init(circuit_db)
 
 # 3 - Send HELLO to neighbours
 Log.section
@@ -56,7 +48,5 @@ end
 # 4 - Listen for HELLO and LSPDU
 Log.section
 loop do
-  packet = Packet.make(UDP_Socket.recv(64).unpack('L*'))
-  Log.write('receives', packet)
-  packet.deliver
+  Packet.receive.deliver
 end
