@@ -3,7 +3,7 @@ require 'socket'
 #
 # Parsing arguments
 #
-raise RuntimeError, 'Expects arguments: <router_id>, <nse_hostname>, <nse_port>, <router_port>' if ARGV.length != 4
+raise RuntimeError, 'Expects arguments: <router_id>, <nse_hostname>, <nse_port>, <router_port>' unless ARGV.length == 4
 
 ROUTER_ID = ARGV[0].to_i
 NSE_HOSTNAME = ARGV[1]
@@ -30,7 +30,7 @@ load 'circuit.rb'
 load 'graph.rb'
 
 # 1 - Send INIT
-udp_send(socket, PacketInit.new(ROUTER_ID), log_file)
+PacketInit.new(ROUTER_ID).udp_send(socket,log_file)
 
 
 # 2 - Receive circuit DB from nse
@@ -46,5 +46,13 @@ log_file.write("\nR#{ROUTER_ID} receives circuit_db #{circuit_db}\n\n")
 
 # 3 - Send HELLO to all neighbours
 circuit_db.keys.each do |link|
-  udp_send(socket, PacketHello.new(ROUTER_ID, link), log_file)
+  PacketHello.new(ROUTER_ID, link).udp_send(socket, log_file)
+end
+log_file.write("\n")
+
+# 4 - Listen for HELLO and LSPDU
+loop do
+  packet = make_pkt(socket.recv(64).unpack('L*'))
+  log_file.write("R#{ROUTER_ID} receives #{packet}\n")
+  packet.deliver
 end

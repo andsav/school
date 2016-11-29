@@ -1,15 +1,43 @@
-class PacketInit < Struct.new(:router_id); end
+module Packet
+  def to_s
+    ret = "#{self.class.name} ("
+    self.each_pair{|k,v| ret += "#{k}: #{v}, "}
+    ret.chomp(', ') + ')'
+  end
 
-class PacketHello < Struct.new(:router_id, :link_id); end
+  def udp_send(socket, log_file)
+    socket.send self.to_a.pack('L*'), 0, NSE_HOSTNAME, NSE_PORT
+    log_msg = "R#{ROUTER_ID} sends #{self}"
+    log_file.write("#{log_msg}\n")
+  end
+end
 
-class PacketLSPDU < Struct.new(:sender, :router_id, :link_id, :cost, :via); end
+class PacketInit < Struct.new(:router_id)
+  include Packet
+end
 
-def udp_send(socket, packet, log_file)
-  socket.send packet.to_a.pack('L*'), 0, NSE_HOSTNAME, NSE_PORT
+class PacketHello < Struct.new(:router_id, :link_id)
+  include Packet
 
-  log_msg = "R#{ROUTER_ID} sends #{packet.class.name} ("
-  packet.each_pair{|k,v| log_msg += "#{k}: #{v}, "}
-  log_msg = log_msg.chomp(', ') + ')'
+  def deliver
 
-  log_file.write("#{log_msg}\n")
+  end
+end
+
+class PacketLSPDU < Struct.new(:sender, :router_id, :link_id, :cost, :via)
+  include Packet
+
+  def deliver
+
+  end
+end
+
+def make_pkt(data)
+  [PacketInit, PacketHello, PacketLSPDU].each do |p|
+    if p.new.size == data.size
+      return p.new(*data)
+    end
+  end
+
+  raise RuntimeError "Attempting to create packet of size #{data.size}"
 end
