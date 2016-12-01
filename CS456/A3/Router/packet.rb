@@ -40,15 +40,16 @@ class PacketHello < Struct.new(:router_id, :link_id)
 
   # Reply to HELLO with LSDPDU's
   def deliver
-    # PacketLSPDU.new(ROUTER_ID, self[0], self[1], cost, via)
+    Topology.flood(self['link_id'])
   end
 
 end
 
 class PacketLSPDU < Struct.new(:sender, :router_id, :link_id, :cost, :via)
 
+  # Update topology and send updates to neighbours if there were changes
   def deliver
-
+    Topology.update(self) && Topology.flood_neighbours
   end
 
 end

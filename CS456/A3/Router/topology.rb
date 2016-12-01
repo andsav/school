@@ -6,8 +6,9 @@ module Topology
     @rib = RIB.new
   end
 
-  def update(packet)
+  def update(lspdu)
 
+    false
   end
 
   def rib
@@ -17,10 +18,25 @@ module Topology
   def link_state
     @link_state
   end
+
+  def flood(link_id)
+    @link_state.each do |router, state|
+      state.each do |link_cost|
+        link, cost = link_cost
+        PacketLSPDU.new(ROUTER_ID, router, link, cost, link_id).udp_send unless link == link_id
+      end
+    end
+  end
+
+  def flood_neighbours
+    @link_state[ROUTER_ID].each do |x|
+      flood(x['link'])
+    end
+  end
 end
 
 #
-# LinkStateDB: {router => [ (link, cost) ]}
+# LinkStateDB: { router => [(link, cost)] }
 #
 class LinkStateDB < Hash
 
@@ -58,7 +74,7 @@ class LinkStateDB < Hash
 end
 
 #
-# RIB: {dest => (path, cost)}
+# RIB: { dest => (path, cost) }
 #
 class RIB < Hash
 
