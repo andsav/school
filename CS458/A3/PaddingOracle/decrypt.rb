@@ -9,4 +9,4 @@ COOKIE = Base64.strict_decode64(ARGV[0])
 blocks = COOKIE.chars.each_slice(16).map(&:join)
 IV = blocks.shift
 
-puts blocks.collect {|x| Oracle.decrypt_block(x)}.join
+puts Oracle.decrypt(blocks).join

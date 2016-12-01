@@ -29,9 +29,7 @@ module Topology
   end
 
   def flood_neighbours
-    @link_state[ROUTER_ID].each do |x|
-      flood(x['link'])
-    end
+    @link_state[ROUTER_ID].each { |x| flood(x['link']) }
   end
 end
 
@@ -57,11 +55,10 @@ class LinkStateDB < Hash
   end
 
   def group(router)
-    ret = "R#{ROUTER_ID} -> R#{router} nbr link #{self[router].size}\n"
-    self[router].each do |link_cost|
+    "R#{ROUTER_ID} -> R#{router} nbr link #{self[router].size}\n"
+    + self[router].each do |link_cost|
       ret += "R#{ROUTER_ID} -> R#{router} #{link_cost}\n"
     end
-    ret
   end
 
   def to_s
