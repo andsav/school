@@ -5,7 +5,8 @@ raise RuntimeError, 'Expected cookie as argument' unless ARGV.length == 1
 
 URL = 'http://ugster21.student.cs.uwaterloo.ca:4555'
 
-cookie = Base64.decode64(ARGV[0])
-blocks = cookie.unpack('s*')
+COOKIE = Base64.strict_decode64(ARGV[0])
+blocks = COOKIE.chars.each_slice(16).map(&:join)
+IV = blocks.shift
 
-puts Oracle.test_cookie(cookie)
+puts blocks.collect {|x| Oracle.decrypt_block(x)}.join
