@@ -3,7 +3,6 @@ require 'open-uri'
 
 URL = 'http://localhost:4555'
 BLOCK_SIZE = 16
-LAST_BYTE = BLOCK_SIZE-1
 
 def debug(msg)
   $stderr.puts msg
@@ -79,6 +78,8 @@ module Oracle
   end
 
   def decrypt(blocks)
+    debug "#{blocks.length-1} blocks to decrypt"
+
     decrypted = Array.new
 
     iv = blocks.shift
@@ -93,5 +94,20 @@ module Oracle
     decrypted[-1].chop!
 
     decrypted
+  end
+
+  def encrypt(blocks)
+    debug "#{blocks.length} blocks to encrypt"
+
+    encrypted = Array.new
+    encrypted.unshift random_bytes(BLOCK_SIZE).pack('C*')
+
+    blocks.reverse_each do |block|
+      encrypted.unshift xor(block, decrypt_block(encrypted[0]))
+    end
+
+    debug "#{encrypted.length} blocks in the encrypted message"
+
+    encrypted
   end
 end
