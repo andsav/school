@@ -1,7 +1,7 @@
 require 'base64'
 require 'open-uri'
 
-
+URL = 'http://localhost:4555'
 BLOCK_SIZE = 16
 LAST_BYTE = BLOCK_SIZE-1
 
@@ -14,7 +14,6 @@ module Oracle
 
   def test_cookie(cookie)
     encoded = Base64.strict_encode64(cookie)
-    #debug "Attempting cookie #{encoded}"
     begin
       open(URL, 'Cookie' => "user=\"#{encoded}\"")
       debug "Server accepts the cookie #{encoded}"
@@ -82,10 +81,16 @@ module Oracle
   def decrypt(blocks)
     decrypted = Array.new
 
-    decrypted[0] = xor(IV, decrypt_block(blocks[0]))
+    iv = blocks.shift
+
+    decrypted[0] = xor(iv, decrypt_block(blocks[0]))
     (1..blocks.size-1).each do |b|
       decrypted[b] = xor(blocks[b-1], decrypt_block(blocks[b]))
     end
+
+    # Strip padding
+    decrypted[-1].rstrip!
+    decrypted[-1].chop!
 
     decrypted
   end
