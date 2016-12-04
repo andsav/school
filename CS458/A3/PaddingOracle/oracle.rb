@@ -57,7 +57,7 @@ module Oracle
     decoded
   end
 
-  def decrypt_block(block)
+  def decrypt_block_helper(block)
     decoded = last_word(block)
 
     until decoded.length == BLOCK_SIZE
@@ -77,16 +77,24 @@ module Oracle
     decoded.pack('C*')
   end
 
-  def decrypt(blocks)
-    debug "#{blocks.length-1} blocks to decrypt"
+  def decrypt_block(block)
+    attempt = Array.new(2)
 
+    begin
+      attempt.clear
+      Array.new(2) { Thread.new{ attempt.push decrypt_block_helper(block) } }.each(&:join)
+    end until attempt[0] == attempt[1]
+
+    attempt[0]
+  end
+
+  def decrypt(blocks)
     decrypted = Array.new
 
-    iv = blocks.shift
+    debug "#{blocks.length-1} blocks to decrypt"
 
-    decrypted[0] = xor(iv, decrypt_block(blocks[0]))
     (1..blocks.size-1).each do |b|
-      decrypted[b] = xor(blocks[b-1], decrypt_block(blocks[b]))
+      decrypted.push xor(blocks[b-1], decrypt_block(blocks[b]))
     end
 
     # Strip padding

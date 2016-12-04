@@ -5,7 +5,7 @@ test_encrypt:
 	./encrypt '{"first_seen": 1277946061, "is_admin": false}'
 
 ugster: 
-	scp * a3savin@ugster21.student.cs.uwaterloo.ca:~/a3
+	scp * a3savin@ugster21.student.cs.uwaterloo.ca:~/a3 && ssh a3savin@ugster21.student.cs.uwaterloo.ca
 
 tar:
 	tar cvf src.tar *.rb decrypt encrypt
