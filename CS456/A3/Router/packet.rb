@@ -49,7 +49,7 @@ class PacketLSPDU < Struct.new(:sender, :router_id, :link_id, :cost, :via)
 
   # Update topology and send updates to neighbours if there were changes
   def deliver
-    Topology.update(self) && Topology.flood_neighbours
+      Topology.flood_neighbours if Topology.update(self)
   end
 
 end

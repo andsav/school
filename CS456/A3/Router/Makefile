@@ -5,4 +5,4 @@ pull:
 	rsync -r a3savin@linux.student.cs.uwaterloo.ca:~/cs456/a3_r/* ./
 
 clean:
-	pkill ruby && rm *.log
+	pkill ruby

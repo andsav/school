@@ -7,8 +7,18 @@ module Topology
   end
 
   def update(lspdu)
+    if @link_state.has_key? lspdu['router_id']
+      return false if @link_state[lspdu['router_id']].has_key?(lspdu['link_id'])
+    end
 
-    false
+    @link_state.update(lspdu['router_id'], lspdu['link_id'], lspdu['cost'])
+
+    Log.write(@link_state)
+
+
+    Log.write(@rib)
+
+    true
   end
 
   def rib
@@ -21,15 +31,14 @@ module Topology
 
   def flood(link_id)
     @link_state.each do |router, state|
-      state.each do |link_cost|
-        link, cost = link_cost
+      state.each do |link, cost|
         PacketLSPDU.new(ROUTER_ID, router, link, cost, link_id).udp_send unless link == link_id
       end
     end
   end
 
   def flood_neighbours
-    @link_state[ROUTER_ID].each { |x| flood(x['link']) }
+    @link_state[ROUTER_ID].keys.each { |link| flood(link) }
   end
 end
 
@@ -38,35 +47,39 @@ end
 #
 class LinkStateDB < Hash
 
-  class LinkCost < Struct.new(:link, :cost)
+  class LinkCosts < Hash
+    def initialize(router)
+      @router = router
+    end
+
     def to_s
-      "link #{self[0]} cost #{self[1]}"
+      "R#{ROUTER_ID} -> R#{@router} nbr link #{self.size}\n" + self.keys.sort.collect do |link|
+        "R#{ROUTER_ID} -> R#{@router} link #{link} cost #{self[link]}"
+      end.join("\n")
     end
   end
 
   def initialize(circuit_db)
-    self[ROUTER_ID] = Array.new unless self.has_key?(ROUTER_ID)
+    self[ROUTER_ID] = LinkCosts.new(ROUTER_ID) unless self.has_key?(ROUTER_ID)
 
     circuit_db.each do |link, cost|
-      self[ROUTER_ID].push LinkCost.new(link, cost)
+      self[ROUTER_ID][link] = cost
     end
 
-    Log.write(self.group(ROUTER_ID))
+    Log.write(self[ROUTER_ID])
   end
 
-  def group(router)
-    "R#{ROUTER_ID} -> R#{router} nbr link #{self[router].size}\n"
-    + self[router].each do |link_cost|
-      ret += "R#{ROUTER_ID} -> R#{router} #{link_cost}\n"
+  def update(router, link, cost)
+    self[router] = LinkCosts.new(router) unless self.has_key?(router)
+    self[router][link] = cost
+
+    self.keys.each do |r|
+      self[r][link] = cost if self[r].has_key?(link)
     end
   end
 
   def to_s
-    ret = "# Topology Database\n"
-    self.keys.sort do |router|
-      ret += self.group(router)
-    end
-    ret
+    "\n# Topology Database updated!\n" + self.keys.sort.collect { |k| self[k] }.join("\n") + "\n"
   end
 end
 
@@ -91,11 +104,11 @@ class RIB < Hash
   end
 
   def to_s
-    ret = "# RIB\n"
+    ret = "\n# RIB updated!\n"
     self.sort.map do |dest, path_cost|
       ret += "R#{ROUTER_ID} -> R#{dest} -> #{path_cost}\n"
     end
-    ret
+    ret + "\n"
   end
 
 end
