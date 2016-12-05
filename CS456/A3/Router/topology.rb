@@ -3,7 +3,6 @@ module Topology
 
   def init(circuit_db)
     @link_state = LinkStateDB.new(circuit_db)
-    @rib = RIB.new
   end
 
   def update(lspdu)
@@ -15,14 +14,9 @@ module Topology
 
     Log.write(@link_state)
 
-
-    Log.write(@rib)
+    Log.write(@link_state.rib)
 
     true
-  end
-
-  def rib
-    @rib
   end
 
   def link_state
@@ -78,37 +72,102 @@ class LinkStateDB < Hash
     end
   end
 
-  def to_s
-    "\n# Topology Database updated!\n" + self.keys.sort.collect { |k| self[k] }.join("\n") + "\n"
-  end
-end
-
-#
-# RIB: { dest => (path, cost) }
-#
-class RIB < Hash
-
-  class PathCost < Struct.new(:path, :cost)
-    def to_s
-      case self[0]
-        when ROUTER_ID
-          'Local, 0'
-        else
-          "R#{self[0]}, #{self[1]}"
+  def edges
+    ret = {}
+    self.each do |v1, v2_cost|
+      v2_cost.each do |v2, cost|
+        ret[[v1, v2]] = ret[[v2, v1]] = cost
       end
     end
+    ret
   end
 
-  def initialize
-    self[ROUTER_ID] = PathCost.new(ROUTER_ID, 0)
+  def dijkstra(target)
+    vertices = []
+    neighbours = {}
+    dist = {}
+    prev = {}
+
+    self.each do |v1, v2_cost|
+      vertices << v1
+      v2_cost.each do |v2, cost|
+        vertices << v2
+        neighbours[v1] = [] unless neighbours.has_key? v1
+        neighbours[v2] = [] unless neighbours.has_key? v2
+
+        neighbours[v1] << [ v2, cost ]
+        neighbours[v2] << [ v1, cost ]
+      end
+    end
+
+    vertices.uniq!
+
+    vertices.each do |v|
+      prev[v] = nil
+      dist[v] = Float::INFINITY
+    end
+
+    dist[ROUTER_ID] = 0
+    q = vertices
+
+    until q.empty?
+      min = Float::INFINITY
+
+      u = q[0]
+
+      q.each do |v|
+        if dist[v] < min
+          min = dist[v]
+          u = v
+        end
+      end
+
+      q.delete(u)
+
+      break if dist[u] == Float::INFINITY || u == target
+
+      if neighbours.has_key?(u)
+        neighbours[u].each do |x|
+          alt = dist[u] + x[1]
+
+          if alt < dist[x[0]]
+            dist[x[0]] = alt
+            prev[x[0]] = u
+          end
+        end
+      end
+
+    end
+
+    path = []
+    path2 = []
+
+    while prev.has_key?(u)
+      path.unshift u
+      path2.unshift dist[u]
+      u = prev[u]
+    end
+
+    [path, dist[target]]
+
   end
 
-  def to_s
-    ret = "\n# RIB updated!\n"
-    self.sort.map do |dest, path_cost|
-      ret += "R#{ROUTER_ID} -> R#{dest} -> #{path_cost}\n"
+  def rib
+    ret = "\n# RIB\n"
+
+    self.keys.sort.each do |dest|
+      path, cost = dijkstra(dest)
+
+      next unless path[0] == ROUTER_ID
+      via = path.length == 1 ? '(Local)' : "R#{path[1]}"
+
+      ret += "R#{ROUTER_ID} -> R#{dest} -> #{via}, #{cost}\n"
     end
     ret + "\n"
   end
 
+  def to_s
+    "\n# Topology Database\n" + self.keys.sort.collect { |k| self[k] }.join("\n") + "\n"
+  end
 end
+

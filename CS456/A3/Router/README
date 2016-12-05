@@ -1,0 +1,24 @@
+USAGE
+=======
+* Run nse: `./nse-linux386 <ROUTERS IP> <NSE PORT>`
+
+* Start 5 routers: `ruby router.rb <ROUTER ID> <NSE IP> <NSE PORT> <ROUTER PORT>`
+
+Routers will run until they are manually stopped.
+
+
+SOURCE CODE
+===========
+The driver program is router.rb
+
+
+OUTPUT
+=======
+Log will be outputted to router#.log files.
+
+
+TESTED
+========
+* On undergrad environment `ubuntu1404-012`
+
+* `ruby -v`: ruby 1.9.3p484

@@ -7,13 +7,14 @@ module Log
 
   def write(content)
     @log_file.write("#{content}")
+    @log_file.flush
   end
 
   def write_action(action, argument)
-    @log_file.write("R#{ROUTER_ID} #{action} #{argument}\n")
+    write("R#{ROUTER_ID} #{action} #{argument}\n")
   end
 
   def section
-    @log_file.write("\n")
+    write("\n")
   end
 end
