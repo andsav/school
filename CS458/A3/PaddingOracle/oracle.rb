@@ -23,13 +23,16 @@ module Oracle
 
   def test_cookie(byte_array, block)
     encoded = Base64.strict_encode64(byte_array.pack('C*') + block)
-
     begin
-      open(URL, 'Cookie' => "user=\"#{encoded}\"")
-      debug "Server accepts the cookie #{encoded}"
-      true
-    rescue OpenURI::HTTPError
-      false
+      begin
+        open(URL, 'Cookie' => "user=\"#{encoded}\"")
+        debug "Server accepts the cookie #{encoded}"
+        true
+      rescue OpenURI::HTTPError
+        false
+      end
+    rescue
+      test_cookie(byte_array, block)
     end
   end
 

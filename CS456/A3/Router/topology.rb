@@ -140,11 +140,9 @@ class LinkStateDB < Hash
     end
 
     path = []
-    path2 = []
 
     while prev.has_key?(u)
       path.unshift u
-      path2.unshift dist[u]
       u = prev[u]
     end
 
